@@ -6,10 +6,11 @@ import { publicNavigation, siteConfig } from "@/config/site";
 import { Brand } from "./brand";
 import { Container } from "./container";
 import { MobileNavigation } from "./mobile-navigation";
+import { ScrollHeader } from "./scroll-header";
 
 export function PublicHeader() {
   return (
-    <header
+    <ScrollHeader
       data-testid="public-header"
       className="sticky top-0 z-50 border-b border-border/80 bg-white/95 backdrop-blur-md"
     >
@@ -30,6 +31,7 @@ export function PublicHeader() {
             <Link
               key={item.href}
               href={item.href}
+              prefetch={item.href === "/" ? undefined : false}
               aria-current={item.href === "/" ? "page" : undefined}
               className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-brand-green-pale hover:text-brand-green focus-visible:outline-2 focus-visible:outline-brand-blue aria-[current=page]:bg-brand-green-pale aria-[current=page]:text-brand-green"
             >
@@ -52,6 +54,6 @@ export function PublicHeader() {
           <MobileNavigation />
         </div>
       </Container>
-    </header>
+    </ScrollHeader>
   );
 }

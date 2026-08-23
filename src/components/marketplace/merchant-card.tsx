@@ -7,14 +7,14 @@ import type { DemoMerchant } from "@/types/home";
 
 export function MerchantCard({ merchant }: { merchant: DemoMerchant }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-navy/8">
+    <article className="premium-card group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-[transform,border-color,box-shadow] duration-300">
       <div className="relative aspect-[16/9] overflow-hidden bg-brand-green-pale">
         <Image
           src={merchant.image}
           alt={merchant.imageAlt}
           fill
           sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, 25vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="premium-image object-cover transition-transform duration-500"
         />
         <span className="absolute top-3 left-3 rounded-full bg-brand-navy/85 px-2.5 py-1 text-[0.65rem] font-extrabold tracking-wide text-white uppercase backdrop-blur-sm">
           Comercio demo
@@ -41,6 +41,7 @@ export function MerchantCard({ merchant }: { merchant: DemoMerchant }) {
         <div className="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
           <Link
             href={merchant.href}
+            prefetch={false}
             className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-bold text-brand-navy transition-colors hover:border-brand-blue hover:text-brand-blue focus-visible:outline-2 focus-visible:outline-brand-blue"
           >
             Ver perfil

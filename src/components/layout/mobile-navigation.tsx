@@ -65,6 +65,7 @@ export function MobileNavigation() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={item.href === "/" ? undefined : false}
                   aria-current={item.href === "/" ? "page" : undefined}
                   onClick={() => setIsOpen(false)}
                   className="rounded-xl px-4 py-3 text-base font-semibold text-brand-navy transition-colors hover:bg-brand-green-pale hover:text-brand-green focus-visible:outline-2 focus-visible:outline-brand-blue"

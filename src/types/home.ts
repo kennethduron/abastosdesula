@@ -6,6 +6,14 @@ export interface HomeBenefit {
   icon: BenefitIcon;
 }
 
+export interface HeroSlide {
+  title: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+  icon: "market" | "specialists" | "business";
+}
+
 export interface HomeCategory {
   name: string;
   description: string;

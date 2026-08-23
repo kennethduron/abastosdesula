@@ -6,9 +6,10 @@ import type { HomeCategory } from "@/types/home";
 
 export function CategoryCard({ category }: { category: HomeCategory }) {
   return (
-    <article className="group overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-navy/8">
+    <article className="premium-card group overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-[transform,border-color,box-shadow] duration-300">
       <Link
         href={category.href}
+        prefetch={false}
         className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
         aria-label={`Explorar ${category.name}`}
       >
@@ -18,7 +19,7 @@ export function CategoryCard({ category }: { category: HomeCategory }) {
             alt={`Categoría ${category.name}`}
             fill
             sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 20vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="premium-image object-cover transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-navy/25 to-transparent" />
         </div>

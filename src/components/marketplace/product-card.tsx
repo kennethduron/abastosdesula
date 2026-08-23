@@ -6,9 +6,10 @@ import type { DemoProduct } from "@/types/home";
 
 export function ProductCard({ product }: { product: DemoProduct }) {
   return (
-    <article className="group min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-navy/8">
+    <article className="premium-card group min-w-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-[transform,border-color,box-shadow] duration-300">
       <Link
         href={product.href}
+        prefetch={false}
         className="block rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
       >
         <div className="relative aspect-square overflow-hidden bg-slate-100">
@@ -17,7 +18,7 @@ export function ProductCard({ product }: { product: DemoProduct }) {
             alt={product.imageAlt}
             fill
             sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 17vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="premium-image object-cover transition-transform duration-500"
           />
           <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2 py-1 text-[0.62rem] font-extrabold tracking-wide text-brand-green uppercase shadow-sm backdrop-blur-sm">
             Precio demo

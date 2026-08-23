@@ -13,7 +13,7 @@ export function MarketplaceSearch({ compact = false }: MarketplaceSearchProps) {
       action="/productos"
       method="get"
       className={cn(
-        "flex w-full items-center gap-2 rounded-2xl border border-border bg-white p-2 shadow-xl shadow-brand-navy/8 focus-within:border-brand-blue focus-within:ring-4 focus-within:ring-brand-blue/10",
+        "flex w-full items-center gap-2 rounded-2xl border border-border bg-white p-2 shadow-xl shadow-brand-navy/8 transition-[border-color,box-shadow] duration-300 focus-within:border-brand-blue focus-within:shadow-2xl focus-within:ring-4 focus-within:shadow-brand-blue/10 focus-within:ring-brand-blue/10",
         compact && "shadow-sm",
       )}
     >

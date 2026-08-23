@@ -38,7 +38,12 @@ export function PublicFooter() {
 
         <FooterColumn title="Navegación">
           {publicNavigation.map((item) => (
-            <Link key={item.href} href={item.href} className="footer-link">
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={item.href === "/" ? undefined : false}
+              className="footer-link"
+            >
               {item.label}
             </Link>
           ))}
@@ -49,6 +54,7 @@ export function PublicFooter() {
             <Link
               key={category.name}
               href={category.href}
+              prefetch={false}
               className="footer-link"
             >
               {category.name}

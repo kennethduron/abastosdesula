@@ -13,7 +13,7 @@ export function BenefitCard({ benefit }: { benefit: HomeBenefit }) {
   const Icon = benefitIcons[benefit.icon];
 
   return (
-    <article className="flex min-w-0 items-start gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm sm:p-5">
+    <article className="premium-card flex min-w-0 items-start gap-3 rounded-2xl border border-border bg-white p-4 shadow-sm transition-[transform,border-color,box-shadow] duration-300 sm:p-5">
       <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-brand-green-pale text-brand-green">
         <Icon className="size-5" aria-hidden="true" />
       </span>
