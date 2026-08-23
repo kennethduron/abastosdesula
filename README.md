@@ -18,6 +18,8 @@ pnpm dev
 ```
 
 La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
+En builds de producción registra una PWA instalable; consulta su política de
+cache en [`docs/pwa.md`](docs/pwa.md).
 
 ## Validaciones
 

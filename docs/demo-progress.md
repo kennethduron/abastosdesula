@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Backend Firebase demo completado localmente; activación remota pendiente de credenciales.
+PWA completada; siguiente fase: preparación y auditoría de Vercel.
 
 ## Fases terminadas
 
@@ -86,6 +86,18 @@ Backend Firebase demo completado localmente; activación remota pendiente de cre
 - Bundle dividido: la Home no carga Firebase, `/acceso` carga solo Auth y
   Firestore queda limitado a los paneles privados.
 
+### PWA instalable
+
+- Rama: `feat/pwa`.
+- Manifest nativo de Next.js, metadata Apple y theme color.
+- Iconos 192, 512, maskable y Apple creados desde el símbolo visual del proyecto.
+- Service worker sin dependencias con cache exclusivamente público y versionado.
+- `/api`, autenticación, CRM y administración excluidos explícitamente del cache.
+- Fallback offline institucional sin datos privados.
+- QA: 5/5 escenarios PWA dedicados y regresión Playwright global 60/60; un
+  escenario Firebase se ejecuta por separado y permanece excluido de la suite
+  estándar.
+
 ## Decisiones
 
 - Monolito modular.
@@ -107,6 +119,6 @@ Backend Firebase demo completado localmente; activación remota pendiente de cre
 
 ## Siguiente fase
 
-Integrar `feat/firebase-demo-backend` y continuar con `feat/pwa`. La activación
-remota de Auth/Firestore quedará pendiente hasta recibir credenciales seguras del
-proyecto.
+Integrar `feat/pwa` y preparar Vercel sin desplegar hasta confirmar autenticación
+y variables del proyecto. La activación remota de Firebase sigue pendiente de
+credenciales seguras.

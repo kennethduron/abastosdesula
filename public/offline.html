@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es-HN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#071a33" />
+    <title>Sin conexión | Central de Abastos de Sula</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #f1f5f9;
+        color: #071a33;
+        font-family: system-ui, sans-serif;
+      }
+      main {
+        width: min(100%, 520px);
+        padding: 36px;
+        border: 1px solid #dbe3ec;
+        border-radius: 28px;
+        background: white;
+        box-shadow: 0 20px 60px rgb(7 26 51 / 10%);
+      }
+      .icon {
+        display: grid;
+        width: 56px;
+        height: 56px;
+        place-items: center;
+        border-radius: 18px;
+        background: #169b45;
+        color: white;
+      }
+      .icon svg {
+        width: 30px;
+        height: 30px;
+      }
+      h1 {
+        margin: 24px 0 12px;
+        font-size: clamp(2rem, 8vw, 3rem);
+        line-height: 1;
+      }
+      p {
+        margin: 0;
+        color: #526173;
+        line-height: 1.7;
+      }
+      button {
+        width: 100%;
+        min-height: 48px;
+        margin-top: 28px;
+        border: 0;
+        border-radius: 14px;
+        background: #071a33;
+        color: white;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <span class="icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path
+            d="M4 14c0-6 3.6-9.2 12-10-.1 7.6-3.3 12-9.4 12-.8 0-1.6-.1-2.2-.3"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M3.5 20c1.6-4.9 4.8-8.3 9.7-10.5"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </span>
+      <h1>Estás sin conexión</h1>
+      <p>
+        El contenido privado nunca se guarda para uso offline. Recupera tu
+        conexión para continuar navegando.
+      </p>
+      <button type="button" onclick="location.reload()">
+        Intentar nuevamente
+      </button>
+    </main>
+  </body>
+</html>
