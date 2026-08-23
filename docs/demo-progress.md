@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Dashboard y CRM demo completados; siguiente fase: administración institucional.
+Panel institucional completado; siguiente fase: backend demo con Firebase.
 
 ## Fases terminadas
 
@@ -58,6 +58,17 @@ Dashboard y CRM demo completados; siguiente fase: administración institucional.
 - Navegación responsive para teléfono, tablet y escritorio.
 - QA: format, lint, typecheck, test, build y Playwright 48/48.
 
+### Administración institucional
+
+- Rama: `feat/institutional-admin`.
+- Ruta `/admin` separada del CRM de comerciantes.
+- Métricas agregadas, estados de comerciantes, actividad y contenido demo.
+- Bloqueo explícito para sesiones merchant y acceso local diferenciado por rol.
+- Sin nombres de clientes ni finanzas privadas detalladas en la vista central.
+- Gestión local persistente de estado de negocios y visibilidad de categorías.
+- Responsive: fichas móviles y tabla operativa desde tablet.
+- QA dedicado: 5/5 escenarios Playwright, consola limpia y cero overflow.
+
 ## Decisiones
 
 - Monolito modular.
@@ -76,5 +87,5 @@ Dashboard y CRM demo completados; siguiente fase: administración institucional.
 
 ## Siguiente fase
 
-Integrar `feat/merchant-dashboard-crm` y crear la administración institucional
-antes de conectar Firebase.
+Integrar `feat/institutional-admin` y sustituir las puertas locales por Firebase
+Authentication y los stores browser por adaptadores Firestore.

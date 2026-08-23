@@ -90,9 +90,12 @@ export function MerchantDashboard({
     getDemoSessionServerSnapshot,
   );
   const session = parseDemoSession(sessionSnapshot);
-  const business = businesses.find((item) => item.id === session?.businessId);
+  const business = businesses.find(
+    (item) =>
+      item.id === (session?.role === "merchant" ? session.businessId : ""),
+  );
 
-  if (!session || !business) {
+  if (!session || session.role !== "merchant" || !business) {
     return <DemoAccessGate businesses={businesses} />;
   }
 
@@ -125,6 +128,7 @@ function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
             if (!business) return;
             ensureDemoQuoteSeed();
             setDemoSession({
+              role: "merchant",
               businessId: business.id,
               businessName: business.name,
             });

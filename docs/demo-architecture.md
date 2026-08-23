@@ -38,6 +38,11 @@ El selector de negocio es únicamente una puerta de acceso demostrativa. No se
 considera autenticación, no concede autoridad real y será reemplazado por el
 adaptador de identidad de Firebase.
 
+`/admin` mantiene un shell y store separados para el rol institucional demo.
+Consume solicitudes únicamente para métricas agregadas y nunca expone contactos,
+notas ni información financiera privada de comerciantes. Una sesión merchant se
+rechaza explícitamente antes de renderizar el dashboard institucional.
+
 ## Fronteras de seguridad
 
 Toda entidad privada utiliza `businessId`. Las lecturas y mutaciones sensibles requieren simultáneamente el identificador del negocio y el identificador de la entidad. El adaptador mock ya prueba que una solicitud de un negocio no puede consultarse usando otro `businessId`.

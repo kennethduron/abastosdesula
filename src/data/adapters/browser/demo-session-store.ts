@@ -4,9 +4,16 @@ const SESSION_KEY = "abastos-demo-merchant-session-v1";
 const SESSION_CHANGED_EVENT = "abastos-demo-session-changed";
 
 export interface DemoMerchantSession {
+  role: "merchant";
   businessId: string;
   businessName: string;
 }
+
+export interface DemoInstitutionalSession {
+  role: "institutional_admin";
+}
+
+export type DemoSession = DemoMerchantSession | DemoInstitutionalSession;
 
 export function getDemoSessionSnapshot() {
   return window.localStorage.getItem(SESSION_KEY) ?? "";
@@ -18,8 +25,12 @@ export function getDemoSessionServerSnapshot() {
 
 export function parseDemoSession(snapshot: string) {
   try {
-    const value = JSON.parse(snapshot) as Partial<DemoMerchantSession>;
-    return typeof value.businessId === "string" &&
+    const value = JSON.parse(snapshot) as Partial<DemoSession>;
+    if (value.role === "institutional_admin") {
+      return value as DemoInstitutionalSession;
+    }
+    return value.role === "merchant" &&
+      typeof value.businessId === "string" &&
       typeof value.businessName === "string"
       ? (value as DemoMerchantSession)
       : null;
@@ -28,7 +39,7 @@ export function parseDemoSession(snapshot: string) {
   }
 }
 
-export function setDemoSession(session: DemoMerchantSession | null) {
+export function setDemoSession(session: DemoSession | null) {
   if (session) {
     window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   } else {
