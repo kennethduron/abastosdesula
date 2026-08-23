@@ -1,10 +1,11 @@
 "use client";
 
 import { Menu, MessageCircle, X } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-import { publicNavigation, siteConfig } from "@/config/site";
+import { siteConfig } from "@/config/site";
+
+import { PublicNavLinks } from "./public-nav-links";
 
 const subscribeToHydration = () => () => undefined;
 
@@ -61,18 +62,7 @@ export function MobileNavigation() {
             className="absolute inset-x-0 top-full z-50 border-t border-border bg-white shadow-2xl"
           >
             <div className="mx-auto grid max-w-7xl gap-1 px-4 py-5 sm:px-6">
-              {publicNavigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={item.href === "/" ? undefined : false}
-                  aria-current={item.href === "/" ? "page" : undefined}
-                  onClick={() => setIsOpen(false)}
-                  className="rounded-xl px-4 py-3 text-base font-semibold text-brand-navy transition-colors hover:bg-brand-green-pale hover:text-brand-green focus-visible:outline-2 focus-visible:outline-brand-blue"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <PublicNavLinks mobile onNavigate={() => setIsOpen(false)} />
               <a
                 href={siteConfig.whatsappDemoUrl}
                 target="_blank"

@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Arquitectura de datos desacoplada.
+Directorio de comerciantes completado; siguiente fase: perfil, catálogo y carrito.
 
 ## Fases terminadas
 
@@ -19,8 +19,18 @@ Arquitectura de datos desacoplada.
 ### Arquitectura de datos
 
 - Rama: `feat/data-architecture`
+- Commit: `fadb796 feat: add vendor-neutral data architecture`
 - Modelos de dominio, contratos de repositorio y adaptador mock implementados.
 - Regla de carrito monocomerciante y validación pública estricta incluidas.
+- Integrada por fast-forward a `main`.
+
+### Directorio de comerciantes
+
+- Rama: `feat/merchant-directory`
+- Ruta `/comerciantes` con búsqueda, categorías, disponibilidad y orden funcionales.
+- Seis perfiles ficticios marcados como demo.
+- Rutas de perfil prerenderizadas para evitar enlaces rotos.
+- Matriz responsive y pruebas Playwright incluidas.
 
 ## Decisiones
 
@@ -34,8 +44,8 @@ Arquitectura de datos desacoplada.
 ## Problemas conocidos
 
 - Firebase, autenticación y persistencia real todavía no están conectados.
-- Los perfiles y solicitudes aún no están expuestos en rutas públicas.
+- El catálogo de perfil todavía no incluye carrito ni formulario de solicitud.
 
 ## Siguiente fase
 
-Crear `feat/merchant-directory` desde `main` actualizado e implementar `/comerciantes` con búsqueda y filtros funcionales.
+Integrar `feat/merchant-directory` y crear `feat/merchant-profile-cart` para completar catálogo, carrito monocomerciante y solicitud mock.

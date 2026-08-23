@@ -1,11 +1,10 @@
 import { MessageCircle } from "lucide-react";
-import Link from "next/link";
-
-import { publicNavigation, siteConfig } from "@/config/site";
+import { siteConfig } from "@/config/site";
 
 import { Brand } from "./brand";
 import { Container } from "./container";
 import { MobileNavigation } from "./mobile-navigation";
+import { PublicNavLinks } from "./public-nav-links";
 import { ScrollHeader } from "./scroll-header";
 
 export function PublicHeader() {
@@ -27,17 +26,7 @@ export function PublicHeader() {
           aria-label="Navegación principal"
           className="hidden items-center gap-1 xl:flex"
         >
-          {publicNavigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              prefetch={item.href === "/" ? undefined : false}
-              aria-current={item.href === "/" ? "page" : undefined}
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition-colors hover:bg-brand-green-pale hover:text-brand-green focus-visible:outline-2 focus-visible:outline-brand-blue aria-[current=page]:bg-brand-green-pale aria-[current=page]:text-brand-green"
-            >
-              {item.label}
-            </Link>
-          ))}
+          <PublicNavLinks />
         </nav>
 
         <div className="flex items-center gap-2">
