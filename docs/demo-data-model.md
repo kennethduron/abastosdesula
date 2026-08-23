@@ -39,6 +39,10 @@ new -> in_review -> quoted -> confirmed -> preparing -> completed
 
 Cada cambio crea un `QuoteStatusEvent` con fecha, estado y actor opcional.
 
+El CRM local siempre filtra por `businessId` tanto al leer como al mutar una
+solicitud. Cambiar un estado agrega un evento al historial y actualiza
+`updatedAt`; una solicitud de otro negocio no puede mutarse mediante ese flujo.
+
 ## Dinero
 
 Los importes se almacenan en unidades menores (`amountMinor`) y moneda `HNL`. Los precios actuales son referencias ficticias de la demo, no ofertas comerciales reales.

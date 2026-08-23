@@ -24,7 +24,19 @@ src/domain (reglas y modelos)
 - `src/data/adapters/mock`: implementación reproducible para desarrollo y QA.
 - `src/data/adapters/browser`: persistencia local temporal para demostrar flujos entre comprador y CRM antes de Firebase.
 - `src/data/repository-provider.ts`: punto de composición actual. Cambiar el proveedor no cambia la UI.
-- `src/app`: Server Components por defecto. Los Client Components quedan limitados a búsqueda, filtros, carrito y otras interacciones reales.
+- `src/app`: Server Components por defecto. Los Client Components quedan limitados a búsqueda, filtros, carrito, sesión demo y otras interacciones reales.
+
+## Dashboard temporal
+
+`/panel` prepara la lista de negocios y conteos desde un Server Component. El
+shell interactivo consume stores externos de navegador para sesión y
+solicitudes, por lo que el almacenamiento local no contamina la capa de dominio
+ni los componentes públicos. La suscripción incluye cleanup y sincronización
+entre pestañas mediante el evento nativo `storage`.
+
+El selector de negocio es únicamente una puerta de acceso demostrativa. No se
+considera autenticación, no concede autoridad real y será reemplazado por el
+adaptador de identidad de Firebase.
 
 ## Fronteras de seguridad
 

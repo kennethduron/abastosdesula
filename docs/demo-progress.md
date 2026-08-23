@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Solicitud de cotización mock completada; siguiente fase: dashboard y CRM.
+Dashboard y CRM demo completados; siguiente fase: administración institucional.
 
 ## Fases terminadas
 
@@ -49,6 +49,15 @@ Solicitud de cotización mock completada; siguiente fase: dashboard y CRM.
 - Solicitud, historial inicial y actividad persistidos localmente para el CRM demo.
 - Confirmación explícita sin envío de mensajes ni escrituras a servicios reales.
 
+### Dashboard y CRM
+
+- Rama: `feat/merchant-dashboard-crm`.
+- Ruta estática `/panel` con puerta de acceso local explícitamente demo.
+- Resumen, métricas, solicitudes, filtros, detalle, clientes e historial.
+- Cambios de estado persistentes y aislamiento doble por `businessId`.
+- Navegación responsive para teléfono, tablet y escritorio.
+- QA: format, lint, typecheck, test, build y Playwright 48/48.
+
 ## Decisiones
 
 - Monolito modular.
@@ -57,6 +66,8 @@ Solicitud de cotización mock completada; siguiente fase: dashboard y CRM.
 - Datos demo marcados explícitamente.
 - `businessId` obligatorio para aislamiento privado.
 - Precios expresados en unidades menores.
+- El acceso del panel es una sesión local explícitamente demostrativa; no se
+  considera una frontera de seguridad y será sustituida por autenticación real.
 
 ## Problemas conocidos
 
@@ -65,4 +76,5 @@ Solicitud de cotización mock completada; siguiente fase: dashboard y CRM.
 
 ## Siguiente fase
 
-Integrar `feat/quote-request-flow` y crear `feat/merchant-dashboard-crm` para consumir solicitudes persistidas, mostrar métricas y cambiar estados con historial.
+Integrar `feat/merchant-dashboard-crm` y crear la administración institucional
+antes de conectar Firebase.
