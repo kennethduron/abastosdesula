@@ -13,21 +13,18 @@ export const heroSlides: HeroSlide[] = [
     description: "Variedad para hogares y negocios",
     image: "/images/home/hero-market.webp",
     imageAlt: "Puesto de mercado con frutas y vegetales frescos",
-    icon: "market",
   },
   {
     title: "Comerciantes especializados",
     description: "Encuentra proveedores por categoría",
     image: "/images/home/category-fruits.webp",
     imageAlt: "Selección colorida de frutas frescas",
-    icon: "specialists",
   },
   {
     title: "Cotizaciones comerciales",
     description: "Conecta directamente con proveedores",
     image: "/images/home/category-groceries.webp",
     imageAlt: "Exhibición organizada de vegetales para compra comercial",
-    icon: "business",
   },
 ];
 

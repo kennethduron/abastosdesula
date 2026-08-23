@@ -11,7 +11,6 @@ export interface HeroSlide {
   description: string;
   image: string;
   imageAlt: string;
-  icon: "market" | "specialists" | "business";
 }
 
 export interface HomeCategory {

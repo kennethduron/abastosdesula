@@ -70,6 +70,7 @@ test("the hero carousel supports accessible manual navigation", async ({
 }) => {
   await page.goto("/");
 
+  const hero = page.getByTestId("hero-background");
   const carousel = page.getByTestId("hero-carousel");
   const firstSlide = page.getByTestId("hero-slide-1");
   const secondSlide = page.getByTestId("hero-slide-2");
@@ -78,10 +79,24 @@ test("the hero carousel supports accessible manual navigation", async ({
     name: "Mostrar diapositiva siguiente",
   });
 
+  await expect(hero).toBeVisible();
   await expect(carousel).toBeVisible();
+  await expect(carousel).toHaveAttribute("data-background-carousel", "true");
   await expect(carousel).toHaveAttribute("aria-roledescription", "carrusel");
+  await expect(carousel.locator('[data-testid^="hero-slide-"]')).toHaveCount(3);
   await expect(firstSlide).toHaveAttribute("data-active", "true");
   await expect(firstSlide).toBeVisible();
+  await expect(
+    hero.getByRole("heading", {
+      level: 1,
+      name: /Productos frescos, comerciantes de confianza/i,
+    }),
+  ).toBeVisible();
+  await expect(
+    hero.getByRole("searchbox", {
+      name: "Buscar productos o comerciantes",
+    }),
+  ).toBeVisible();
   await expect(nextButton).toBeVisible();
   await expect(nextButton).toHaveAttribute(
     "aria-label",
@@ -98,6 +113,20 @@ test("the hero carousel supports accessible manual navigation", async ({
 
   await nextButton.press("Enter");
   await expect(thirdSlide).toHaveAttribute("data-active", "true");
+});
+
+test("the hero background advances automatically", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("hero-slide-1")).toHaveAttribute(
+    "data-active",
+    "true",
+  );
+  await page.waitForTimeout(6_300);
+  await expect(page.getByTestId("hero-slide-2")).toHaveAttribute(
+    "data-active",
+    "true",
+  );
 });
 
 test("reduced motion keeps the carousel stable and content visible", async ({
@@ -196,9 +225,46 @@ for (const viewport of auditViewports) {
 
     if (viewport.screenshot) {
       await page.screenshot({
-        path: `artifacts/home-premium-audit/home-${viewport.name}.png`,
+        path: `artifacts/hero-background-audit/hero-${viewport.name}.png`,
         fullPage: true,
       });
     }
   });
 }
+
+test("captures the three hero backgrounds at desktop", async ({ page }) => {
+  const slideTitles = [
+    "Productos frescos",
+    "Comerciantes especializados",
+    "Cotizaciones comerciales",
+  ];
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+
+  for (let index = 1; index <= 3; index += 1) {
+    const slide = page.getByTestId(`hero-slide-${index}`);
+    if (index > 1) {
+      await page
+        .getByRole("button", {
+          name: `Mostrar diapositiva ${index}: ${slideTitles[index - 1]}`,
+        })
+        .click();
+    }
+
+    await expect(slide).toHaveAttribute("data-active", "true");
+    await expect
+      .poll(() =>
+        slide
+          .locator("img")
+          .evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+    await page.waitForTimeout(150);
+    await page.screenshot({
+      path: `artifacts/hero-background-audit/hero-bg-slide-${index}-1440.png`,
+      fullPage: false,
+    });
+  }
+});

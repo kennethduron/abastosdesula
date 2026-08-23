@@ -34,51 +34,54 @@ export default function HomePage() {
     <main id="contenido-principal" className="min-w-0 flex-1 overflow-clip">
       <section
         id="inicio"
-        className="relative isolate bg-brand-surface py-12 sm:py-16 lg:py-20"
+        data-testid="hero-background"
+        data-hero-background
+        className="relative isolate flex overflow-hidden bg-brand-navy py-12 pb-32 sm:py-16 sm:pb-32 md:min-h-[600px] md:py-16 md:pb-28 lg:min-h-[660px] lg:py-20"
       >
-        <div className="absolute inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(circle_at_15%_20%,var(--brand-green-pale),transparent_55%)]" />
-        <Container className="grid items-center gap-10 lg:grid-cols-[1.02fr_0.98fr] lg:gap-14">
-          <div className="max-w-2xl">
-            <div className="hero-intro">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-brand-green/20 bg-white px-3 py-1.5 text-xs font-bold text-brand-green shadow-sm">
-                <Sparkles className="size-3.5" aria-hidden="true" />
-                Mercado digital multicomercio
-              </div>
-              <h1 className="text-[clamp(2.45rem,7vw,4.7rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-brand-navy">
-                Productos frescos,
-                <span className="mt-2 block text-brand-green">
-                  comerciantes de confianza
-                </span>
-              </h1>
-              <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
-                Encuentra frutas, verduras, granos, lácteos y otros productos
-                disponibles en la Central de Abastos de Sula.
-              </p>
+        <HeroCarousel slides={heroSlides} />
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/productos"
-                  prefetch={false}
-                  className="button-primary"
-                >
-                  Explorar productos
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                </Link>
-                <Link
-                  href="/comerciantes"
-                  prefetch={false}
-                  className="button-secondary"
-                >
-                  Ver comerciantes
-                </Link>
-              </div>
+        <Container className="pointer-events-none relative z-20 flex w-full items-center">
+          <div className="pointer-events-auto max-w-2xl">
+            <div className="hero-intro hero-intro-1 mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-brand-navy/40 px-3 py-1.5 text-xs font-bold text-brand-green-light shadow-lg backdrop-blur-md">
+              <Sparkles className="size-3.5" aria-hidden="true" />
+              Mercado digital multicomercio
             </div>
 
-            <div className="hero-intro hero-intro-search mt-8 max-w-xl">
+            <h1 className="hero-intro hero-intro-2 text-[clamp(2.45rem,7vw,4.7rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-white">
+              Productos frescos,
+              <span className="mt-2 block text-brand-green-light">
+                comerciantes de confianza
+              </span>
+            </h1>
+
+            <p className="hero-intro hero-intro-3 mt-6 max-w-xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
+              Encuentra frutas, verduras, granos, lácteos y otros productos
+              disponibles en la Central de Abastos de Sula.
+            </p>
+
+            <div className="hero-intro hero-intro-4 mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/productos"
+                prefetch={false}
+                className="button-primary"
+              >
+                Explorar productos
+                <ArrowRight className="size-4" aria-hidden="true" />
+              </Link>
+              <Link
+                href="/comerciantes"
+                prefetch={false}
+                className="button-secondary"
+              >
+                Ver comerciantes
+              </Link>
+            </div>
+
+            <div className="hero-intro hero-intro-5 mt-8 max-w-xl">
               <MarketplaceSearch />
             </div>
 
-            <div className="hero-intro hero-intro-search mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-slate-500 sm:text-sm">
+            <div className="hero-intro hero-intro-6 mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-white/85 sm:text-sm">
               {[
                 "Catálogo organizado",
                 "Contacto directo",
@@ -86,7 +89,7 @@ export default function HomePage() {
               ].map((item) => (
                 <span key={item} className="inline-flex items-center gap-1.5">
                   <CheckCircle2
-                    className="size-4 text-brand-green"
+                    className="size-4 text-brand-green-light"
                     aria-hidden="true"
                   />
                   {item}
@@ -94,8 +97,6 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-
-          <HeroCarousel slides={heroSlides} />
         </Container>
       </section>
 
