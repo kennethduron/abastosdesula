@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { InstitutionalAdmin } from "@/components/admin/institutional-admin";
-import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin";
-import { getVerifiedAppSession } from "@/data/adapters/firebase/session";
+import {
+  isFirebaseAdminConfigured,
+  isLocalFirebaseFallbackAllowed,
+} from "@/data/adapters/firebase/admin-config";
+import { getAppSessionState } from "@/data/adapters/firebase/session";
 import {
   demoBusinesses,
   demoCategories,
@@ -45,9 +48,21 @@ export default async function InstitutionalAdminPage() {
     ).length,
   }));
 
-  if (isFirebaseAdminConfigured()) {
-    const session = await getVerifiedAppSession();
-    if (!session) redirect("/acceso?next=/admin");
+  if (
+    !isLocalFirebaseFallbackAllowed() &&
+    (process.env.NODE_ENV === "production" || isFirebaseAdminConfigured())
+  ) {
+    const sessionState = await getAppSessionState();
+    if (sessionState.status !== "authenticated") {
+      const reason =
+        sessionState.status === "invalid"
+          ? "&error=session&clearSession=1"
+          : sessionState.status === "unavailable"
+            ? "&error=service"
+            : "";
+      redirect(`/acceso?next=/admin${reason}`);
+    }
+    const session = sessionState.session;
     if (session.role !== "institutional_admin") redirect("/panel");
     return (
       <InstitutionalAdmin

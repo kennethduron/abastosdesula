@@ -1,7 +1,7 @@
 "use client";
 
 import { LockKeyhole, LogIn, TriangleAlert } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
@@ -9,12 +9,25 @@ import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
 
 export function LoginForm({
   firebaseAvailable,
+  serviceUnavailable,
+  clearSession,
+  sessionExpired,
+  localFallbackAvailable,
 }: {
   firebaseAvailable: boolean;
+  serviceUnavailable: boolean;
+  clearSession: boolean;
+  sessionExpired: boolean;
+  localFallbackAvailable: boolean;
 }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (!clearSession) return;
+    void fetch("/api/auth/session", { method: "DELETE" });
+  }, [clearSession]);
 
   if (!firebaseAvailable) {
     return (
@@ -23,22 +36,29 @@ export function LoginForm({
           <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-700" />
           <div>
             <h2 className="font-extrabold text-amber-950">
-              Firebase pendiente de configuración
+              {serviceUnavailable
+                ? "Servicio de acceso temporalmente no disponible"
+                : "Firebase pendiente de configuración"}
             </h2>
             <p className="mt-2 text-sm leading-6 text-amber-900/80">
-              No hay credenciales públicas configuradas. Los paneles locales
-              demo continúan disponibles para QA sin simular autenticación real.
+              {serviceUnavailable
+                ? "La configuración segura del servidor necesita atención. Intenta nuevamente más tarde."
+                : localFallbackAvailable
+                  ? "Firebase no está configurado. Los paneles locales demo están disponibles sólo para esta ejecución de QA."
+                  : "La configuración de acceso todavía no está completa. Intenta nuevamente más tarde."}
             </p>
           </div>
         </div>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <a href="/panel" className="button-secondary">
-            Panel comerciante local
-          </a>
-          <a href="/admin" className="button-secondary">
-            Admin institucional local
-          </a>
-        </div>
+        {localFallbackAvailable && (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <a href="/panel" className="button-secondary">
+              Panel comerciante local
+            </a>
+            <a href="/admin" className="button-secondary">
+              Admin institucional local
+            </a>
+          </div>
+        )}
       </div>
     );
   }
@@ -82,6 +102,14 @@ export function LoginForm({
         }
       }}
     >
+      {sessionExpired && (
+        <p
+          role="status"
+          className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800"
+        >
+          Tu sesión expiró. Inicia sesión nuevamente.
+        </p>
+      )}
       <label className="block text-sm font-bold text-brand-navy">
         Correo electrónico
         <input

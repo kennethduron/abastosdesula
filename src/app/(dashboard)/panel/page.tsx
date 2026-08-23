@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { MerchantDashboard } from "@/components/dashboard/merchant-dashboard";
-import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin";
-import { getVerifiedAppSession } from "@/data/adapters/firebase/session";
+import {
+  isFirebaseAdminConfigured,
+  isLocalFirebaseFallbackAllowed,
+} from "@/data/adapters/firebase/admin-config";
+import { getAppSessionState } from "@/data/adapters/firebase/session";
 import { demoBusinesses, demoProducts } from "@/data/adapters/mock/demo-data";
 
 export const metadata: Metadata = {
@@ -24,9 +27,21 @@ export default async function MerchantPanelPage() {
     ).length,
   }));
 
-  if (isFirebaseAdminConfigured()) {
-    const session = await getVerifiedAppSession();
-    if (!session) redirect("/acceso?next=/panel");
+  if (
+    !isLocalFirebaseFallbackAllowed() &&
+    (process.env.NODE_ENV === "production" || isFirebaseAdminConfigured())
+  ) {
+    const sessionState = await getAppSessionState();
+    if (sessionState.status !== "authenticated") {
+      const reason =
+        sessionState.status === "invalid"
+          ? "&error=session&clearSession=1"
+          : sessionState.status === "unavailable"
+            ? "&error=service"
+            : "";
+      redirect(`/acceso?next=/panel${reason}`);
+    }
+    const session = sessionState.session;
     if (session.role === "institutional_admin") redirect("/admin");
     const business = businesses.find((item) => item.id === session.businessId);
     if (!business) redirect("/acceso?error=business");

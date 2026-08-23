@@ -24,6 +24,10 @@ export default defineConfig({
     ? undefined
     : {
         command: "node node_modules/next/dist/bin/next start",
+        env: {
+          ...process.env,
+          ABASTOS_E2E_LOCAL_FALLBACK: "true",
+        },
         url: "http://localhost:3000",
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

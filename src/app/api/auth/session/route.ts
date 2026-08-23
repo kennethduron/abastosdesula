@@ -1,14 +1,11 @@
 import { cookies } from "next/headers";
 import { z } from "zod";
 
-import {
-  getFirebaseAdminAuth,
-  getFirebaseAdminDb,
-  isFirebaseAdminConfigured,
-} from "@/data/adapters/firebase/admin";
+import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin-config";
 import {
   FIREBASE_SESSION_COOKIE,
   FIREBASE_SESSION_MAX_AGE_SECONDS,
+  getAppSessionState,
 } from "@/data/adapters/firebase/session";
 import { hasTrustedSameOrigin } from "@/server/security/same-origin";
 
@@ -18,6 +15,30 @@ const sessionInputSchema = z
   .object({ idToken: z.string().min(100).max(10_000) })
   .strict();
 const RECENT_SIGN_IN_SECONDS = 5 * 60;
+
+function safeErrorCode(error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof error.code === "string"
+  ) {
+    return error.code;
+  }
+  return "unknown";
+}
+
+export async function GET() {
+  const state = await getAppSessionState();
+  if (state.status === "authenticated") {
+    return Response.json({ authenticated: true, role: state.session.role });
+  }
+  if (state.status === "invalid") {
+    (await cookies()).delete(FIREBASE_SESSION_COOKIE);
+  }
+  const status = state.status === "unavailable" ? 503 : 401;
+  return Response.json({ authenticated: false }, { status });
+}
 
 export async function POST(request: Request) {
   if (!isFirebaseAdminConfigured()) {
@@ -36,6 +57,8 @@ export async function POST(request: Request) {
     return Response.json({ error: "Token inválido." }, { status: 400 });
   }
   try {
+    const { getFirebaseAdminAuth, getFirebaseAdminDb } =
+      await import("@/data/adapters/firebase/admin");
     const auth = getFirebaseAdminAuth();
     const decoded = await auth.verifyIdToken(parsed.data.idToken, true);
     const authAgeSeconds = Date.now() / 1_000 - decoded.auth_time;
@@ -81,10 +104,18 @@ export async function POST(request: Request) {
       priority: "high",
     });
     return Response.json({ role });
-  } catch {
+  } catch (error) {
+    const code = safeErrorCode(error);
+    console.error("[firebase-auth] session creation failed", { code });
+    const status = code.startsWith("auth/") ? 401 : 503;
     return Response.json(
-      { error: "No fue posible crear la sesión." },
-      { status: 401 },
+      {
+        error:
+          status === 401
+            ? "No fue posible crear la sesión."
+            : "El servicio de acceso no está disponible temporalmente.",
+      },
+      { status },
     );
   }
 }

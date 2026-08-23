@@ -1,6 +1,5 @@
 import { publicQuoteRequestSchema } from "@/domain";
-import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin";
-import { createFirebaseQuoteRequest } from "@/data/adapters/firebase/quote-request-writer";
+import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin-config";
 import { SlidingWindowRateLimiter } from "@/server/security/sliding-window-rate-limit";
 import { hasTrustedSameOrigin } from "@/server/security/same-origin";
 
@@ -45,6 +44,8 @@ export async function POST(request: Request) {
     );
   }
   try {
+    const { createFirebaseQuoteRequest } =
+      await import("@/data/adapters/firebase/quote-request-writer");
     const result = await createFirebaseQuoteRequest(parsed.data);
     return Response.json(result, { status: 201 });
   } catch (error) {
@@ -53,7 +54,17 @@ export async function POST(request: Request) {
     const status =
       message.includes("pertenecer") || message.includes("encontrado")
         ? 400
-        : 500;
+        : 503;
+    const code =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      typeof error.code === "string"
+        ? error.code
+        : "unknown";
+    if (status === 503) {
+      console.error("[firebase-quotes] write failed", { code });
+    }
     return Response.json(
       {
         error:
