@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { InstitutionalAdmin } from "@/components/admin/institutional-admin";
+import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin";
+import { getVerifiedAppSession } from "@/data/adapters/firebase/session";
 import {
   demoBusinesses,
   demoCategories,
@@ -14,7 +17,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function InstitutionalAdminPage() {
+export const dynamic = "force-dynamic";
+
+export default async function InstitutionalAdminPage() {
   const businesses = demoBusinesses.map((business) => {
     const merchant = demoMerchants.find(
       (item) => item.businessId === business.id,
@@ -39,6 +44,19 @@ export default function InstitutionalAdminPage() {
       merchant.categoryIds.includes(category.id),
     ).length,
   }));
+
+  if (isFirebaseAdminConfigured()) {
+    const session = await getVerifiedAppSession();
+    if (!session) redirect("/acceso?next=/admin");
+    if (session.role !== "institutional_admin") redirect("/panel");
+    return (
+      <InstitutionalAdmin
+        businesses={businesses}
+        categories={categories}
+        firebaseAuthenticated
+      />
+    );
+  }
 
   return <InstitutionalAdmin businesses={businesses} categories={categories} />;
 }

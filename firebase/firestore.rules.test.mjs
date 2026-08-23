@@ -1,0 +1,171 @@
+import { readFileSync } from "node:fs";
+import { after, before, beforeEach, describe, it } from "node:test";
+import assert from "node:assert/strict";
+import {
+  assertFails,
+  assertSucceeds,
+  initializeTestEnvironment,
+} from "@firebase/rules-unit-testing";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+
+const projectId = "demo-abastosdesula";
+const [host = "127.0.0.1", portText = "8080"] = (
+  process.env.FIRESTORE_EMULATOR_HOST ?? "127.0.0.1:8080"
+).split(":");
+let environment;
+
+before(async () => {
+  environment = await initializeTestEnvironment({
+    projectId,
+    firestore: {
+      host,
+      port: Number(portText),
+      rules: readFileSync("firebase/firestore.rules", "utf8"),
+    },
+  });
+});
+
+beforeEach(async () => {
+  await environment.clearFirestore();
+  await environment.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await Promise.all([
+      setDoc(doc(db, "users", "merchant-a"), {
+        role: "merchant",
+        active: true,
+      }),
+      setDoc(doc(db, "users", "merchant-b"), {
+        role: "merchant",
+        active: true,
+      }),
+      setDoc(doc(db, "users", "admin"), {
+        role: "institutional_admin",
+        active: true,
+      }),
+      setDoc(doc(db, "quoteRequests", "quote-a"), {
+        businessId: "business-a",
+        customerId: "customer-a",
+        status: "new",
+      }),
+      setDoc(doc(db, "quoteRequests", "quote-b"), {
+        businessId: "business-b",
+        customerId: "customer-b",
+        status: "new",
+      }),
+      setDoc(doc(db, "products", "product-a"), {
+        businessId: "business-a",
+        status: "active",
+        name: "Producto A",
+      }),
+      setDoc(doc(db, "activities", "activity-a"), {
+        businessId: "business-a",
+        type: "quote_request_created",
+      }),
+      setDoc(doc(db, "notifications", "notification-a"), {
+        businessId: "business-a",
+        type: "quote_request_created",
+        readAt: null,
+      }),
+    ]);
+  });
+});
+
+after(async () => {
+  await environment?.cleanup();
+});
+
+function merchant(uid, businessId) {
+  return environment
+    .authenticatedContext(uid, {
+      role: "merchant",
+      businessId,
+    })
+    .firestore();
+}
+
+describe("Firestore multitenant rules", () => {
+  it("rejects anonymous access to private quote requests", async () => {
+    const db = environment.unauthenticatedContext().firestore();
+    await assertFails(getDoc(doc(db, "quoteRequests", "quote-a")));
+  });
+
+  it("allows a merchant to read and update only its own quote", async () => {
+    const db = merchant("merchant-a", "business-a");
+    await assertSucceeds(getDoc(doc(db, "quoteRequests", "quote-a")));
+    await assertSucceeds(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), { status: "in_review" }),
+    );
+    await assertFails(getDoc(doc(db, "quoteRequests", "quote-b")));
+    await assertFails(
+      updateDoc(doc(db, "quoteRequests", "quote-b"), { status: "cancelled" }),
+    );
+  });
+
+  it("rejects manual businessId reassignment", async () => {
+    const db = merchant("merchant-a", "business-a");
+    await assertFails(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        businessId: "business-b",
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "products", "product-a"), {
+        businessId: "business-b",
+      }),
+    );
+  });
+
+  it("allows workflow fields but rejects customer or item tampering", async () => {
+    const db = merchant("merchant-a", "business-a");
+    await assertSucceeds(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        status: "quoted",
+        history: [{ status: "quoted", changedAt: "2026-08-22T00:00:00.000Z" }],
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        customerName: "Contacto manipulado",
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        status: "arbitrary_status",
+      }),
+    );
+  });
+
+  it("keeps detailed quotes private from institutional admin", async () => {
+    const db = environment
+      .authenticatedContext("admin", {
+        role: "institutional_admin",
+      })
+      .firestore();
+    await assertFails(getDoc(doc(db, "quoteRequests", "quote-a")));
+    const activity = await assertSucceeds(
+      getDoc(doc(db, "activities", "activity-a")),
+    );
+    assert.equal(activity.data()?.type, "quote_request_created");
+  });
+
+  it("keeps merchant notifications isolated by business", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    const merchantB = merchant("merchant-b", "business-b");
+    await assertSucceeds(
+      getDoc(doc(merchantA, "notifications", "notification-a")),
+    );
+    await assertFails(
+      getDoc(doc(merchantB, "notifications", "notification-a")),
+    );
+    await assertSucceeds(
+      updateDoc(doc(merchantA, "notifications", "notification-a"), {
+        readAt: "2026-08-22T00:00:00.000Z",
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(merchantA, "notifications", "notification-a"), {
+        type: "tampered",
+      }),
+    );
+  });
+});

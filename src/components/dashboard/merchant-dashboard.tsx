@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
 
 import { Brand } from "@/components/layout/brand";
 import {
@@ -34,9 +36,10 @@ import {
   parseStoredDemoQuoteRequests,
   subscribeToStoredDemoQuoteRequests,
   updateStoredDemoQuoteRequestStatus,
-  type StoredDemoQuoteRequest,
 } from "@/data/adapters/browser/quote-request-store";
-import type { QuoteRequestStatus } from "@/domain";
+import { useFirebaseQuoteRequests } from "@/data/adapters/firebase/use-quote-requests";
+import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
+import type { QuoteRequest, QuoteRequestStatus } from "@/domain";
 import { cn } from "@/lib/utils";
 
 interface DashboardBusiness {
@@ -79,17 +82,36 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+async function endSession(
+  firebaseAuthenticated: boolean,
+  navigate: () => void,
+) {
+  if (!firebaseAuthenticated) {
+    setDemoSession(null);
+    return;
+  }
+  await fetch("/api/auth/session", { method: "DELETE" });
+  await signOut(getFirebaseAuth()).catch(() => undefined);
+  navigate();
+}
+
 export function MerchantDashboard({
   businesses,
+  firebaseSession,
 }: {
   businesses: DashboardBusiness[];
+  firebaseSession?: {
+    role: "merchant";
+    businessId: string;
+    businessName: string;
+  };
 }) {
   const sessionSnapshot = useSyncExternalStore(
     subscribeToDemoSession,
     getDemoSessionSnapshot,
     getDemoSessionServerSnapshot,
   );
-  const session = parseDemoSession(sessionSnapshot);
+  const session = firebaseSession ?? parseDemoSession(sessionSnapshot);
   const business = businesses.find(
     (item) =>
       item.id === (session?.role === "merchant" ? session.businessId : ""),
@@ -99,7 +121,12 @@ export function MerchantDashboard({
     return <DemoAccessGate businesses={businesses} />;
   }
 
-  return <DashboardView business={business} />;
+  return (
+    <DashboardView
+      business={business}
+      firebaseAuthenticated={Boolean(firebaseSession)}
+    />
+  );
 }
 
 function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
@@ -161,7 +188,14 @@ function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
   );
 }
 
-function DashboardView({ business }: { business: DashboardBusiness }) {
+function DashboardView({
+  business,
+  firebaseAuthenticated,
+}: {
+  business: DashboardBusiness;
+  firebaseAuthenticated: boolean;
+}) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<QuoteRequestStatus | "all">("all");
@@ -171,18 +205,25 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
     getStoredDemoQuoteRequestsSnapshot,
     getStoredDemoQuoteRequestsServerSnapshot,
   );
+  const firebaseQuotes = useFirebaseQuoteRequests(
+    business.id,
+    firebaseAuthenticated,
+  );
 
   useEffect(() => {
-    ensureDemoQuoteSeed();
-  }, []);
+    if (!firebaseAuthenticated) ensureDemoQuoteSeed();
+  }, [firebaseAuthenticated]);
 
-  const requests = useMemo(
+  const localRequests = useMemo(
     () =>
       parseStoredDemoQuoteRequests(quoteSnapshot).filter(
         (request) => request.businessId === business.id,
       ),
     [business.id, quoteSnapshot],
   );
+  const requests = firebaseAuthenticated
+    ? firebaseQuotes.requests
+    : localRequests;
   const filteredRequests = useMemo(() => {
     const normalized = search.trim().toLocaleLowerCase("es-HN");
     return requests.filter(
@@ -214,10 +255,18 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
         <BusinessIdentity business={business} />
         <DashboardNav />
         <div className="mt-auto border-t border-white/10 pt-5">
-          <p className="text-xs text-slate-400">Sesión local de demostración</p>
+          <p className="text-xs text-slate-400">
+            {firebaseAuthenticated
+              ? "Sesión Firebase de demostración"
+              : "Sesión local de demostración"}
+          </p>
           <button
             type="button"
-            onClick={() => setDemoSession(null)}
+            onClick={() =>
+              void endSession(firebaseAuthenticated, () =>
+                router.replace("/acceso"),
+              )
+            }
             className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
           >
             <LogOut className="size-4" aria-hidden="true" />
@@ -241,7 +290,11 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
             <p className="truncate text-sm font-extrabold text-brand-navy">
               {business.name}
             </p>
-            <p className="text-xs text-slate-500">Panel demo · Datos locales</p>
+            <p className="text-xs text-slate-500">
+              {firebaseAuthenticated
+                ? "Panel demo · Sincronizado"
+                : "Panel demo · Datos locales"}
+            </p>
           </div>
           <button
             type="button"
@@ -269,7 +322,11 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
             <DashboardNav light onNavigate={() => setMobileMenuOpen(false)} />
             <button
               type="button"
-              onClick={() => setDemoSession(null)}
+              onClick={() =>
+                void endSession(firebaseAuthenticated, () =>
+                  router.replace("/acceso"),
+                )
+              }
               className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-rose-700 hover:bg-rose-50"
             >
               <LogOut className="size-4" /> Cerrar sesión demo
@@ -292,7 +349,9 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
                 Resumen general
               </h1>
               <p className="mt-1 text-sm text-slate-500">
-                Solicitudes y actividad guardadas en este navegador.
+                {firebaseAuthenticated
+                  ? "Solicitudes sincronizadas de forma segura por negocio."
+                  : "Solicitudes y actividad guardadas en este navegador."}
               </p>
             </div>
             <span className="w-fit rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
@@ -377,6 +436,14 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
                 </div>
               </div>
             </div>
+            {firebaseQuotes.error && (
+              <p
+                role="alert"
+                className="border-b border-rose-100 bg-rose-50 px-5 py-3 text-sm font-semibold text-rose-700"
+              >
+                {firebaseQuotes.error}
+              </p>
+            )}
             <RequestList requests={filteredRequests} onSelect={setSelectedId} />
           </section>
 
@@ -414,6 +481,10 @@ function DashboardView({ business }: { business: DashboardBusiness }) {
         onClose={() => setSelectedId(null)}
         onStatusChange={(nextStatus) => {
           if (!selectedRequest) return;
+          if (firebaseAuthenticated) {
+            void firebaseQuotes.updateStatus(selectedRequest.id, nextStatus);
+            return;
+          }
           updateStoredDemoQuoteRequestStatus({
             businessId: business.id,
             requestId: selectedRequest.id,
@@ -533,7 +604,7 @@ function RequestList({
   requests,
   onSelect,
 }: {
-  requests: StoredDemoQuoteRequest[];
+  requests: QuoteRequest[];
   onSelect: (id: string) => void;
 }) {
   if (!requests.length) {
@@ -593,7 +664,7 @@ function RequestList({
   );
 }
 
-function StatusOverview({ requests }: { requests: StoredDemoQuoteRequest[] }) {
+function StatusOverview({ requests }: { requests: QuoteRequest[] }) {
   const values = statusOptions.slice(0, 6).map((option) => ({
     ...option,
     count: requests.filter((request) => request.status === option.value).length,
@@ -633,7 +704,7 @@ function StatusOverview({ requests }: { requests: StoredDemoQuoteRequest[] }) {
   );
 }
 
-function RecentCustomers({ requests }: { requests: StoredDemoQuoteRequest[] }) {
+function RecentCustomers({ requests }: { requests: QuoteRequest[] }) {
   const customers = Array.from(
     new Map(requests.map((request) => [request.customerId, request])).values(),
   ).slice(0, 5);
@@ -713,7 +784,7 @@ function RequestDetails({
   onClose,
   onStatusChange,
 }: {
-  request?: StoredDemoQuoteRequest;
+  request?: QuoteRequest;
   onClose: () => void;
   onStatusChange: (status: QuoteRequestStatus) => void;
 }) {

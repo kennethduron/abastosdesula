@@ -9,6 +9,7 @@ import { z } from "zod";
 import { useCart } from "@/components/cart/cart-provider";
 import { publicQuoteRequestSchema } from "@/domain";
 import { saveDemoQuoteRequest } from "@/data/adapters/browser/quote-request-store";
+import { isFirebaseClientConfigured } from "@/data/adapters/firebase/config";
 
 const customerDetailsSchema = publicQuoteRequestSchema.pick({
   customerName: true,
@@ -24,6 +25,8 @@ type CustomerDetails = z.infer<typeof customerDetailsSchema>;
 export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
   const { cart, completeCart } = useCart();
   const [confirmationId, setConfirmationId] = useState<string | null>(null);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const firebaseAvailable = isFirebaseClientConfigured();
   const {
     register,
     handleSubmit,
@@ -36,19 +39,47 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
     },
   });
 
-  function submit(details: CustomerDetails) {
+  async function submit(details: CustomerDetails) {
     if (!cart.businessId || !cart.items.length) return;
+    setSubmissionError(null);
+    const input = {
+      businessId: cart.businessId,
+      ...details,
+      items: cart.items.map(({ productId, quantity, unit }) => ({
+        productId,
+        quantity,
+        unit,
+      })),
+    };
+    if (firebaseAvailable) {
+      try {
+        const response = await fetch("/api/quote-requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        });
+        const result = (await response.json()) as {
+          id?: string;
+          error?: string;
+        };
+        if (!response.ok || !result.id) {
+          setSubmissionError(
+            result.error ?? "No fue posible guardar la solicitud.",
+          );
+          return;
+        }
+        setConfirmationId(result.id);
+        completeCart();
+      } catch {
+        setSubmissionError(
+          "No fue posible conectar con el backend. Intenta nuevamente.",
+        );
+      }
+      return;
+    }
     const request = saveDemoQuoteRequest({
       businessName: cart.items[0].businessName,
-      input: {
-        businessId: cart.businessId,
-        ...details,
-        items: cart.items.map(({ productId, quantity, unit }) => ({
-          productId,
-          quantity,
-          unit,
-        })),
-      },
+      input,
       items: cart.items.map(({ productId, productName, quantity, unit }) => ({
         productId,
         productName,
@@ -74,8 +105,9 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
           Solicitud demo recibida
         </h3>
         <p className="mt-2 text-xs leading-5 text-slate-600">
-          Quedó guardada en el CRM demo con estado Nueva. No se envió ningún
-          mensaje real.
+          Quedó guardada en el CRM demo con estado Nueva
+          {firebaseAvailable ? " mediante Firebase" : " en este navegador"}. No
+          se envió ningún mensaje real.
         </p>
         <p className="mt-3 text-[0.65rem] font-bold break-all text-brand-green">
           {confirmationId}
@@ -173,6 +205,14 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
           />
         </label>
       </div>
+      {submissionError && (
+        <p
+          role="alert"
+          className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-700"
+        >
+          {submissionError}
+        </p>
+      )}
       <button
         type="submit"
         disabled={isSubmitting}
@@ -182,8 +222,9 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
         Enviar solicitud demo
       </button>
       <p className="mt-3 text-center text-[0.68rem] leading-5 text-slate-500">
-        Al enviar, aceptas guardar esta información únicamente en el
-        almacenamiento local de la demo.
+        {firebaseAvailable
+          ? "Al enviar, aceptas guardar esta información en el backend Firebase de la demo."
+          : "Al enviar, aceptas guardar esta información únicamente en el almacenamiento local de la demo."}
       </p>
     </form>
   );

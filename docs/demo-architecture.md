@@ -2,72 +2,84 @@
 
 ## Objetivo
 
-Central de Abastos de Sula se mantiene como un monolito modular en Next.js. Las rutas y componentes consumen contratos del dominio, no SDKs de un proveedor de datos. Esto permite comenzar con memoria local, conectar Firebase para la demostración y migrar posteriormente a Supabase/PostgreSQL sin reconstruir la interfaz.
+Central de Abastos de Sula se mantiene como un monolito modular en Next.js. Las
+rutas y componentes consumen contratos del dominio o adaptadores acotados, no
+credenciales ni SDKs administrativos. Esto permite usar Firebase durante la demo
+y migrar después a Supabase/PostgreSQL sin reconstruir la interfaz.
 
 ## Capas
 
 ```text
 src/app y src/components
-        ->
-servicios/casos de uso
-        ->
-src/data/repositories (contratos)
-        ->
-src/data/adapters/mock
-        -> futuro: firebase | supabase
-        ->
-src/domain (reglas y modelos)
+        -> servicios/casos de uso
+        -> src/data/repositories (contratos)
+        -> src/data/adapters/mock | browser | firebase
+        -> futuro: adapter supabase
+        -> src/domain (reglas y modelos)
 ```
 
-- `src/domain`: entidades y reglas que no dependen de React, Next.js ni Firebase.
+- `src/domain`: entidades, schemas Zod y reglas sin React, Next.js o Firebase.
 - `src/data/repositories`: contratos de persistencia y consultas.
-- `src/data/adapters/mock`: implementación reproducible para desarrollo y QA.
-- `src/data/adapters/browser`: persistencia local temporal para demostrar flujos entre comprador y CRM antes de Firebase.
-- `src/data/repository-provider.ts`: punto de composición actual. Cambiar el proveedor no cambia la UI.
-- `src/app`: Server Components por defecto. Los Client Components quedan limitados a búsqueda, filtros, carrito, sesión demo y otras interacciones reales.
+- `src/data/adapters/mock`: datos reproducibles para render y pruebas.
+- `src/data/adapters/browser`: persistencia local del flujo demo sin backend.
+- `src/data/adapters/firebase`: inicialización lazy de SDK cliente/Admin, sesión,
+  suscripciones privadas y escritura pública validada en servidor.
+- `src/app`: Server Components por defecto; Client Components solo donde hay
+  formularios, filtros, carrito o sincronización real.
 
-## Dashboard temporal
+## Modos de ejecución
 
-`/panel` prepara la lista de negocios y conteos desde un Server Component. El
-shell interactivo consume stores externos de navegador para sesión y
-solicitudes, por lo que el almacenamiento local no contamina la capa de dominio
-ni los componentes públicos. La suscripción incluye cleanup y sincronización
-entre pestañas mediante el evento nativo `storage`.
+Sin variables Firebase, `/panel` y `/admin` conservan puertas locales marcadas
+explícitamente como demostrativas. No se consideran una frontera de seguridad.
 
-El selector de negocio es únicamente una puerta de acceso demostrativa. No se
-considera autenticación, no concede autoridad real y será reemplazado por el
-adaptador de identidad de Firebase.
+Cuando Firebase Admin está configurado, ambas rutas exigen una cookie de sesión
+verificada. El `businessId` del comerciante procede de custom claims y no de un
+selector o payload del usuario. `/admin` requiere `institutional_admin` y consume
+solo actividades agregadas, sin contactos, notas o detalle financiero.
 
-`/admin` mantiene un shell y store separados para el rol institucional demo.
-Consume solicitudes únicamente para métricas agregadas y nunca expone contactos,
-notas ni información financiera privada de comerciantes. Una sesión merchant se
-rechaza explícitamente antes de renderizar el dashboard institucional.
-
-## Fronteras de seguridad
-
-Toda entidad privada utiliza `businessId`. Las lecturas y mutaciones sensibles requieren simultáneamente el identificador del negocio y el identificador de la entidad. El adaptador mock ya prueba que una solicitud de un negocio no puede consultarse usando otro `businessId`.
-
-La futura entrada pública seguirá este recorrido:
+## Flujo público persistente
 
 ```text
 formulario público
-  -> Server Action/Route Handler
+  -> POST /api/quote-requests
   -> Zod strict
-  -> control de abuso
-  -> repositorio
-  -> Firebase Admin
+  -> límite básico por IP
+  -> Firebase Admin SDK
+  -> batch: customer + quote + activity + notification
 ```
 
-Los componentes cliente nunca recibirán credenciales administrativas.
+La escritura pública directa a Firestore está denegada. El cliente nunca recibe
+credenciales Admin. La cookie `abastos_session` es `HttpOnly`, `SameSite=Lax`,
+segura en producción y dura como máximo cinco días. Cada acceso comprueba que
+`users/{uid}` continúa activo y conserva el rol del token.
+
+El intercambio de token exige origen y protocolo coincidentes, y rechaza tokens
+cuya autenticación tenga más de cinco minutos. Esto sigue la recomendación de
+Firebase para reducir CSRF y el riesgo de reutilizar un ID token robado.
+
+## Fronteras multitenant
+
+Toda entidad privada tiene `businessId`. Firestore Rules exige rol activo y que
+el claim coincida con el documento. Un comerciante solo puede cambiar `status`,
+`history` y `updatedAt` de sus solicitudes; no puede modificar cliente, items ni
+tenant. El administrador institucional no puede leer `quoteRequests` ni
+`customers`.
+
+El rate limit actual es in-memory y apropiado solo para esta demo. Una plataforma
+contractual deberá adoptar un almacén distribuido, App Check/CAPTCHA y
+observabilidad antes de aceptar tráfico sostenido.
 
 ## Carrito
 
-Un carrito tiene un único `businessId`. `addItemToCart` devuelve un resultado explícito `business_conflict` si se intenta mezclar productos, permitiendo que la UI ofrezca cancelar o limpiar el carrito anterior sin perder datos silenciosamente.
+Un carrito tiene un único `businessId`. `addItemToCart` devuelve
+`business_conflict` al intentar mezclar comercios para que la UI ofrezca cancelar
+o reemplazar el carrito sin perder datos silenciosamente.
 
-## Estrategia de evolución
+## Evolución
 
-1. `MockRepository`: UI y flujos funcionales sin infraestructura externa.
-2. `FirebaseRepository`: backend temporal de la demo con reglas multitenant.
-3. `SupabaseRepository`: implementación futura sobre PostgreSQL y RLS.
+1. `MockRepository` y adapter browser: UI y flujo funcional sin infraestructura.
+2. `FirebaseAdapter`: backend temporal con Auth, Firestore y Rules multitenant.
+3. `SupabaseRepository`: implementación futura sobre PostgreSQL, membresías y RLS.
 
-Los tres adaptadores deberán satisfacer los mismos contratos y pruebas de aislamiento.
+Los adaptadores futuros deben conservar contratos, schemas y pruebas de
+aislamiento. No se deben trasladar reglas de negocio a componentes React.

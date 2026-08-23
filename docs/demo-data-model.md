@@ -2,51 +2,65 @@
 
 Todos los registros actuales son demostrativos y contienen `isDemo: true`.
 
+## Colecciones Firestore
+
+```text
+businesses/{businessId}      identidad pública del tenant
+merchants/{merchantId}       perfil comercial público
+categories/{categoryId}      taxonomía pública visible
+products/{productId}         catálogo con businessId
+users/{uid}                  rol y estado de acceso
+customers/{customerId}       contacto privado por businessId
+quoteRequests/{quoteId}      solicitud privada por businessId
+activities/{activityId}      evento agregado seguro
+notifications/{id}           aviso privado del comerciante
+```
+
+`users/{uid}` complementa los custom claims de Firebase Auth. La autorización
+requiere que ambos coincidan, que `active` sea verdadero y, para merchants, que
+el claim contenga un único `businessId`.
+
 ## Entidades públicas
 
-- `Business`: identidad legal/técnica del tenant demo.
-- `Merchant`: perfil público, categorías, imagen y productos destacados.
+- `Business`: identidad técnica del tenant demo.
+- `Merchant`: perfil, categorías y productos destacados.
 - `Category`: clasificación navegable del catálogo.
-- `Product`: siempre pertenece a un `businessId` y una categoría.
-- `Promotion`: promoción demostrativa asociada a un negocio y productos.
+- `Product`: siempre pertenece a un negocio y categoría.
+- `Promotion`: promoción ficticia asociada a un negocio.
 
-## Entidades privadas por negocio
+## Entidades privadas
 
-- `Customer`: contacto visto únicamente por el negocio correspondiente.
-- `QuoteRequest`: solicitud/cotización con estado e historial.
-- `QuoteRequestItem`: snapshot del producto, cantidad y unidad solicitada.
-- `Notification`: aviso dirigido a un negocio y opcionalmente a un usuario.
-- `Activity`: auditoría de acciones agregadas o por negocio.
+- `Customer`: contacto visible únicamente por su negocio.
+- `QuoteRequest`: solicitud con items, estado e historial.
+- `Notification`: aviso privado dirigido a un negocio.
+- `Activity`: resumen de auditoría apto para vistas agregadas.
 - `MerchantUser`: vínculo explícito entre usuario y negocio.
 
-## Identidad
+## Carrito y workflow
 
-- `User`: usuario autenticado con rol `merchant` o `institutional_admin`.
-- `MerchantUser`: membresía y permisos operativos dentro de un solo negocio.
-
-## Carrito
-
-- `Cart.businessId`: negocio dueño de todos los items.
-- `CartItem.businessId`: redundancia intencional para validar consistencia.
-- Mezclar negocios produce un conflicto explícito y nunca una sustitución silenciosa.
-
-## Estados de solicitud
+`Cart.businessId` es dueño de todos los items y cada `CartItem` repite ese valor
+para validar consistencia. Mezclar negocios produce un conflicto explícito.
 
 ```text
 new -> in_review -> quoted -> confirmed -> preparing -> completed
   `-----------------------------------------------------> cancelled
 ```
 
-Cada cambio crea un `QuoteStatusEvent` con fecha, estado y actor opcional.
-
-El CRM local siempre filtra por `businessId` tanto al leer como al mutar una
-solicitud. Cambiar un estado agrega un evento al historial y actualiza
-`updatedAt`; una solicitud de otro negocio no puede mutarse mediante ese flujo.
+Cada cambio crea un evento con fecha, estado y actor opcional. En Firebase, las
+Rules restringen el diff de una solicitud a `status`, `history` y `updatedAt`.
+La creación pública usa un batch Admin atómico que genera cliente, solicitud,
+actividad agregada y notificación. El administrador institucional consume la
+actividad y nunca el documento privado.
 
 ## Dinero
 
-Los importes se almacenan en unidades menores (`amountMinor`) y moneda `HNL`. Los precios actuales son referencias ficticias de la demo, no ofertas comerciales reales.
+Los importes usan unidades menores (`amountMinor`) y moneda `HNL`. Son referencias
+ficticias de la demo, no ofertas comerciales ni transacciones reales.
 
 ## Preparación PostgreSQL
 
-Los identificadores son strings opacos para permitir UUIDs futuros. `businessId` se convertirá en clave foránea y política RLS. Las consultas paginadas ya forman parte del contrato de productos para evitar cargar catálogos completos.
+Los IDs son strings opacos para permitir UUIDs. `businessId` se convertirá en
+clave foránea y política RLS. La migración debe traducir custom claims a
+membresías, conservar la transacción del endpoint público y aplicar RLS a
+clientes, solicitudes, notificaciones y actividad privada. Los contratos ya
+contemplan paginación para no cargar catálogos completos.

@@ -22,6 +22,8 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
 
 import { Brand } from "@/components/layout/brand";
 import {
@@ -46,6 +48,8 @@ import {
   parseStoredDemoQuoteRequests,
   subscribeToStoredDemoQuoteRequests,
 } from "@/data/adapters/browser/quote-request-store";
+import { useFirebaseInstitutionalActivities } from "@/data/adapters/firebase/use-institutional-activities";
+import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
 import type { BusinessStatus, QuoteRequestStatus } from "@/domain";
 import { cn } from "@/lib/utils";
 
@@ -74,19 +78,36 @@ const quoteStatusLabels: Record<QuoteRequestStatus, string> = {
   cancelled: "Canceladas",
 };
 
+async function endSession(
+  firebaseAuthenticated: boolean,
+  navigate: () => void,
+) {
+  if (!firebaseAuthenticated) {
+    setDemoSession(null);
+    return;
+  }
+  await fetch("/api/auth/session", { method: "DELETE" });
+  await signOut(getFirebaseAuth()).catch(() => undefined);
+  navigate();
+}
+
 export function InstitutionalAdmin({
   businesses,
   categories,
+  firebaseAuthenticated = false,
 }: {
   businesses: AdminBusiness[];
   categories: AdminCategory[];
+  firebaseAuthenticated?: boolean;
 }) {
   const sessionSnapshot = useSyncExternalStore(
     subscribeToDemoSession,
     getDemoSessionSnapshot,
     getDemoSessionServerSnapshot,
   );
-  const session = parseDemoSession(sessionSnapshot);
+  const session = firebaseAuthenticated
+    ? ({ role: "institutional_admin" } as const)
+    : parseDemoSession(sessionSnapshot);
 
   if (session?.role === "merchant") {
     return <RestrictedMerchantAccess businessName={session.businessName} />;
@@ -94,7 +115,13 @@ export function InstitutionalAdmin({
   if (session?.role !== "institutional_admin") {
     return <AdminAccessGate />;
   }
-  return <AdminDashboard businesses={businesses} categories={categories} />;
+  return (
+    <AdminDashboard
+      businesses={businesses}
+      categories={categories}
+      firebaseAuthenticated={firebaseAuthenticated}
+    />
+  );
 }
 
 function AdminAccessGate() {
@@ -167,10 +194,13 @@ function RestrictedMerchantAccess({ businessName }: { businessName: string }) {
 function AdminDashboard({
   businesses,
   categories,
+  firebaseAuthenticated,
 }: {
   businesses: AdminBusiness[];
   categories: AdminCategory[];
+  firebaseAuthenticated: boolean;
 }) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const adminSnapshot = useSyncExternalStore(
     subscribeToInstitutionalAdminState,
@@ -186,16 +216,30 @@ function AdminDashboard({
     () => parseInstitutionalAdminState(adminSnapshot),
     [adminSnapshot],
   );
-  const requests = useMemo(
+  const localRequests = useMemo(
     () => parseStoredDemoQuoteRequests(quoteSnapshot),
     [quoteSnapshot],
   );
+  const firebaseActivity = useFirebaseInstitutionalActivities(
+    firebaseAuthenticated,
+  );
+  const requestActivities = firebaseAuthenticated
+    ? firebaseActivity.activities.filter(
+        (activity) => activity.type === "quote_request_created",
+      )
+    : [];
+  const requestCount = firebaseAuthenticated
+    ? requestActivities.length
+    : localRequests.length;
   const resolvedBusinesses = businesses.map((business) => ({
     ...business,
     status: adminState.businessStatuses[business.id] ?? business.status,
-    requestCount: requests.filter(
-      (request) => request.businessId === business.id,
-    ).length,
+    requestCount: firebaseAuthenticated
+      ? requestActivities.filter(
+          (activity) => activity.businessId === business.id,
+        ).length
+      : localRequests.filter((request) => request.businessId === business.id)
+          .length,
   }));
   const activeBusinesses = resolvedBusinesses.filter(
     (business) => business.status === "active",
@@ -223,7 +267,11 @@ function AdminDashboard({
           </p>
           <button
             type="button"
-            onClick={() => setDemoSession(null)}
+            onClick={() =>
+              void endSession(firebaseAuthenticated, () =>
+                router.replace("/acceso"),
+              )
+            }
             className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
           >
             <LogOut className="size-4" aria-hidden="true" />
@@ -264,7 +312,11 @@ function AdminDashboard({
             <AdminNav light onNavigate={() => setMobileMenuOpen(false)} />
             <button
               type="button"
-              onClick={() => setDemoSession(null)}
+              onClick={() =>
+                void endSession(firebaseAuthenticated, () =>
+                  router.replace("/acceso"),
+                )
+              }
               className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-rose-700 hover:bg-rose-50"
             >
               <LogOut className="size-4" /> Cerrar sesión demo
@@ -301,7 +353,7 @@ function AdminDashboard({
             <AdminMetric
               icon={ClipboardList}
               label="Solicitudes demo"
-              value={requests.length}
+              value={requestCount}
               tone="blue"
             />
             <AdminMetric
@@ -412,7 +464,30 @@ function AdminDashboard({
               <p className="mt-1 text-sm text-slate-500">
                 Distribución global sin datos financieros privados.
               </p>
-              <QuoteDistribution requests={requests} />
+              {firebaseActivity.error && (
+                <p
+                  role="alert"
+                  className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-semibold text-rose-700"
+                >
+                  {firebaseActivity.error}
+                </p>
+              )}
+              <QuoteDistribution
+                counts={
+                  Object.fromEntries(
+                    Object.keys(quoteStatusLabels).map((status) => [
+                      status,
+                      firebaseAuthenticated
+                        ? status === "new"
+                          ? requestCount
+                          : 0
+                        : localRequests.filter(
+                            (request) => request.status === status,
+                          ).length,
+                    ]),
+                  ) as Record<QuoteRequestStatus, number>
+                }
+              />
             </section>
             <section
               aria-labelledby="audit-title"
@@ -637,22 +712,22 @@ function AdminMetric({
 }
 
 function QuoteDistribution({
-  requests,
+  counts,
 }: {
-  requests: ReturnType<typeof parseStoredDemoQuoteRequests>;
+  counts: Record<QuoteRequestStatus, number>;
 }) {
   const statuses = Object.entries(quoteStatusLabels) as Array<
     [QuoteRequestStatus, string]
   >;
-  const counts = statuses.map(([status, label]) => ({
+  const rows = statuses.map(([status, label]) => ({
     status,
     label,
-    count: requests.filter((request) => request.status === status).length,
+    count: counts[status],
   }));
-  const max = Math.max(1, ...counts.map((item) => item.count));
+  const max = Math.max(1, ...rows.map((item) => item.count));
   return (
     <div className="mt-6 space-y-4">
-      {counts.map((item) => (
+      {rows.map((item) => (
         <div
           key={item.status}
           className="grid grid-cols-[6rem_1fr_2rem] items-center gap-3 text-xs sm:grid-cols-[8rem_1fr_2rem]"

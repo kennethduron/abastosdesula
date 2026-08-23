@@ -1,0 +1,111 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isActiveUser() {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+
+    function isMerchant() {
+      return isActiveUser() && request.auth.token.role == 'merchant' &&
+        request.auth.token.businessId is string;
+    }
+
+    function ownsBusiness(businessId) {
+      return isMerchant() && request.auth.token.businessId == businessId;
+    }
+
+    function isInstitutionalAdmin() {
+      return isActiveUser() && request.auth.token.role == 'institutional_admin';
+    }
+
+    function isQuoteStatus(status) {
+      return status in [
+        'new',
+        'in_review',
+        'quoted',
+        'confirmed',
+        'preparing',
+        'completed',
+        'cancelled'
+      ];
+    }
+
+    match /businesses/{businessId} {
+      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(businessId);
+      allow create, delete: if isInstitutionalAdmin();
+      allow update: if isInstitutionalAdmin() ||
+        (ownsBusiness(businessId) && request.resource.data.id == resource.data.id &&
+          request.resource.data.status == resource.data.status);
+    }
+
+    match /merchants/{merchantId} {
+      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow create: if isInstitutionalAdmin();
+      allow update: if isInstitutionalAdmin() ||
+        (ownsBusiness(resource.data.businessId) &&
+          request.resource.data.businessId == resource.data.businessId);
+      allow delete: if isInstitutionalAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if resource.data.visible == true || isInstitutionalAdmin();
+      allow write: if isInstitutionalAdmin();
+    }
+
+    match /products/{productId} {
+      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow create: if ownsBusiness(request.resource.data.businessId);
+      allow update: if ownsBusiness(resource.data.businessId) &&
+        request.resource.data.businessId == resource.data.businessId;
+      allow delete: if ownsBusiness(resource.data.businessId);
+    }
+
+    match /quoteRequests/{quoteId} {
+      allow read: if ownsBusiness(resource.data.businessId);
+      allow create: if false;
+      allow update: if ownsBusiness(resource.data.businessId) &&
+        request.resource.data.businessId == resource.data.businessId &&
+        request.resource.data.customerId == resource.data.customerId &&
+        isQuoteStatus(request.resource.data.status) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'history', 'updatedAt']);
+      allow delete: if false;
+    }
+
+    match /customers/{customerId} {
+      allow read, delete: if ownsBusiness(resource.data.businessId);
+      allow create: if ownsBusiness(request.resource.data.businessId);
+      allow update: if ownsBusiness(resource.data.businessId) &&
+        request.resource.data.businessId == resource.data.businessId;
+    }
+
+    match /activities/{activityId} {
+      allow read: if isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow write: if false;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if ownsBusiness(resource.data.businessId);
+      allow create, delete: if false;
+      allow update: if ownsBusiness(resource.data.businessId) &&
+        request.resource.data.businessId == resource.data.businessId &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isInstitutionalAdmin());
+      allow write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

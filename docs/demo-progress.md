@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Panel institucional completado; siguiente fase: backend demo con Firebase.
+Backend Firebase demo completado localmente; activación remota pendiente de credenciales.
 
 ## Fases terminadas
 
@@ -69,6 +69,23 @@ Panel institucional completado; siguiente fase: backend demo con Firebase.
 - Responsive: fichas móviles y tabla operativa desde tablet.
 - QA dedicado: 5/5 escenarios Playwright, consola limpia y cero overflow.
 
+### Backend Firebase demo
+
+- Rama: `feat/firebase-demo-backend`.
+- Firebase Authentication para merchant e institutional admin mediante sesión
+  HttpOnly verificada en servidor.
+- Endpoint público estricto con Zod, límite básico de abuso y escritura Admin
+  atómica de cliente, solicitud, actividad y notificación.
+- Suscripción Firestore del CRM limitada al `businessId` del claim.
+- Panel institucional conectado solo a actividades agregadas seguras.
+- Rules multitenant con pruebas en emulador para acceso anónimo, acceso cruzado,
+  reasignación de tenant, manipulación del payload y privacidad institucional.
+- Seed confirmado, idempotente y no destructivo para seis comercios y datos demo.
+- QA: format, lint, typecheck, build, 10/10 unitarias, 6/6 Rules, 55/55
+  Playwright estándar y 1/1 E2E Firebase con Auth/Firestore emulados.
+- Bundle dividido: la Home no carga Firebase, `/acceso` carga solo Auth y
+  Firestore queda limitado a los paneles privados.
+
 ## Decisiones
 
 - Monolito modular.
@@ -77,15 +94,19 @@ Panel institucional completado; siguiente fase: backend demo con Firebase.
 - Datos demo marcados explícitamente.
 - `businessId` obligatorio para aislamiento privado.
 - Precios expresados en unidades menores.
-- El acceso del panel es una sesión local explícitamente demostrativa; no se
-  considera una frontera de seguridad y será sustituida por autenticación real.
+- El acceso local se conserva como fallback de QA cuando Firebase no está
+  configurado; con configuración presente se sustituye por Auth y sesión real.
 
 ## Problemas conocidos
 
-- Firebase, autenticación y persistencia real todavía no están conectados.
-- La persistencia sigue siendo local; Firebase todavía no está conectado.
+- No existen todavía credenciales ni proyecto Firebase remoto en el workspace.
+  Por ello se validan Rules y arquitectura en emulador, pero no se ha activado ni
+  sembrado un entorno remoto.
+- El rate limit del endpoint público es in-memory y deberá reemplazarse por una
+  solución distribuida antes de una operación contractual.
 
 ## Siguiente fase
 
-Integrar `feat/institutional-admin` y sustituir las puertas locales por Firebase
-Authentication y los stores browser por adaptadores Firestore.
+Integrar `feat/firebase-demo-backend` y continuar con `feat/pwa`. La activación
+remota de Auth/Firestore quedará pendiente hasta recibir credenciales seguras del
+proyecto.
