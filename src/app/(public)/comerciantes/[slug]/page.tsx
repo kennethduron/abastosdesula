@@ -1,10 +1,18 @@
-import { ArrowLeft, BadgeCheck, MessageCircle, Package } from "lucide-react";
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Clock3,
+  Layers3,
+  MessageCircle,
+  ShieldCheck,
+} from "lucide-react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/layout/container";
+import { MerchantCatalog } from "@/components/merchants/merchant-catalog";
 import { getRepositories } from "@/data/repository-provider";
 
 interface MerchantProfilePageProps {
@@ -108,51 +116,57 @@ export default async function MerchantProfilePage({
         </Container>
       </section>
 
-      <Container className="py-12 sm:py-16">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-              Catálogo inicial · Demo
-            </p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-[-0.035em] text-brand-navy">
-              Productos destacados
-            </h2>
-          </div>
-          <Package
-            className="hidden size-8 text-brand-green sm:block"
-            aria-hidden="true"
-          />
-        </div>
-
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {productPage.items.map((product) => (
-            <article
-              key={product.id}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      <Container className="relative z-10 -mt-6 py-12 sm:-mt-8 sm:py-16">
+        <div className="mb-12 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              icon: Layers3,
+              title: "Categorías",
+              value: merchantCategories.map(({ name }) => name).join(", "),
+            },
+            {
+              icon: Clock3,
+              title: "Atención",
+              value: "Horario por confirmar · Demo",
+            },
+            {
+              icon: ShieldCheck,
+              title: "Solicitud",
+              value: "Un carrito por comerciante",
+            },
+          ].map(({ icon: Icon, title, value }) => (
+            <div
+              key={title}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-brand-navy/5"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-slate-100">
-                <Image
-                  src={product.image}
-                  alt={product.imageAlt}
-                  fill
-                  sizes="(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-5">
-                <p className="text-xs font-extrabold text-brand-green">
-                  Disponible · Demo
-                </p>
-                <h2 className="mt-1 text-lg font-extrabold text-brand-navy">
-                  {product.name}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {product.description}
-                </p>
-              </div>
-            </article>
+              <span className="grid size-10 place-items-center rounded-xl bg-brand-green-pale text-brand-green">
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <p className="mt-3 text-xs font-extrabold text-brand-navy">
+                {title}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">{value}</p>
+            </div>
           ))}
         </div>
+
+        <MerchantCatalog
+          businessId={merchant.businessId}
+          businessName={merchant.displayName}
+          whatsappDemo={merchant.whatsappDemo ?? "50400000000"}
+          categories={merchantCategories.map(({ id, name }) => ({ id, name }))}
+          products={productPage.items.map((product) => ({
+            id: product.id,
+            categoryId: product.categoryId,
+            name: product.name,
+            description: product.description,
+            image: product.image,
+            imageAlt: product.imageAlt,
+            unit: product.unit,
+            priceMinor: product.referencePrice.amountMinor,
+            availability: product.availability,
+          }))}
+        />
       </Container>
     </main>
   );

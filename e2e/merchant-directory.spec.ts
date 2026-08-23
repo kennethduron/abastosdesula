@@ -72,7 +72,9 @@ test("a directory card navigates to its merchant profile", async ({ page }) => {
       name: "Comercial Frutas del Valle",
     }),
   ).toBeVisible();
-  await expect(page.getByText("Productos destacados")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Productos disponibles" }),
+  ).toBeVisible();
 });
 
 const directoryViewports = [

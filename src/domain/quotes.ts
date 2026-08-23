@@ -43,7 +43,12 @@ export interface QuoteRequest extends DemoEntity {
 export interface CartItem {
   productId: EntityId;
   businessId: EntityId;
+  businessName: string;
+  whatsappDemo: string;
   productName: string;
+  image: string;
+  imageAlt: string;
+  priceMinor: number;
   unit: string;
   quantity: number;
 }

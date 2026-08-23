@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Directorio de comerciantes completado; siguiente fase: perfil, catálogo y carrito.
+Perfil, catálogo y carrito completados; siguiente fase: solicitud de cotización.
 
 ## Fases terminadas
 
@@ -32,6 +32,15 @@ Directorio de comerciantes completado; siguiente fase: perfil, catálogo y carri
 - Rutas de perfil prerenderizadas para evitar enlaces rotos.
 - Matriz responsive y pruebas Playwright incluidas.
 
+### Perfil, catálogo y carrito
+
+- Rama: `feat/merchant-profile-cart`
+- Perfiles prerenderizados con identidad, categorías e información demo.
+- Catálogo con búsqueda, filtros, cantidades y precios ficticios de referencia.
+- Carrito persistente mediante `localStorage` y sincronizado como store externo.
+- Regla monocomerciante con conflicto explícito y opción segura para reemplazar.
+- Drawer responsive y consulta opcional por WhatsApp demo.
+
 ## Decisiones
 
 - Monolito modular.
@@ -44,8 +53,8 @@ Directorio de comerciantes completado; siguiente fase: perfil, catálogo y carri
 ## Problemas conocidos
 
 - Firebase, autenticación y persistencia real todavía no están conectados.
-- El catálogo de perfil todavía no incluye carrito ni formulario de solicitud.
+- El carrito todavía no incluye el formulario estructurado de solicitud.
 
 ## Siguiente fase
 
-Integrar `feat/merchant-directory` y crear `feat/merchant-profile-cart` para completar catálogo, carrito monocomerciante y solicitud mock.
+Integrar `feat/merchant-profile-cart` y construir el formulario de solicitud mock con React Hook Form, Zod y confirmación persistente.

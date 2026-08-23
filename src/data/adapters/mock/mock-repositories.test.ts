@@ -36,7 +36,12 @@ describe("mock commerce repositories", () => {
     const result = addItemToCart(cart, {
       productId: "product-cabbage",
       businessId: "business-la-huerta",
+      businessName: "Verduras La Huerta",
+      whatsappDemo: "50400000000",
       productName: "Repollo Verde",
+      image: "/images/home/product-cabbage.webp",
+      imageAlt: "Repollo verde",
+      priceMinor: 600,
       unit: "unidad",
       quantity: 1,
     });
