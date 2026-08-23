@@ -7,6 +7,7 @@ import {
   FIREBASE_SESSION_MAX_AGE_SECONDS,
   getAppSessionState,
 } from "@/data/adapters/firebase/session";
+import { getSanitizedServerError } from "@/server/safe-server-error";
 import { hasTrustedSameOrigin } from "@/server/security/same-origin";
 
 export const runtime = "nodejs";
@@ -15,18 +16,6 @@ const sessionInputSchema = z
   .object({ idToken: z.string().min(100).max(10_000) })
   .strict();
 const RECENT_SIGN_IN_SECONDS = 5 * 60;
-
-function safeErrorCode(error: unknown) {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof error.code === "string"
-  ) {
-    return error.code;
-  }
-  return "unknown";
-}
 
 export async function GET() {
   const state = await getAppSessionState();
@@ -56,10 +45,13 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ error: "Token inválido." }, { status: 400 });
   }
+  let firebaseStage = "module-import";
   try {
     const { getFirebaseAdminAuth, getFirebaseAdminDb } =
       await import("@/data/adapters/firebase/admin");
+    firebaseStage = "get-auth";
     const auth = getFirebaseAdminAuth();
+    firebaseStage = "verify-id-token";
     const decoded = await auth.verifyIdToken(parsed.data.idToken, true);
     const authAgeSeconds = Date.now() / 1_000 - decoded.auth_time;
     if (authAgeSeconds < -60 || authAgeSeconds > RECENT_SIGN_IN_SECONDS) {
@@ -78,10 +70,10 @@ export async function POST(request: Request) {
         { status: 403 },
       );
     }
-    const user = await getFirebaseAdminDb()
-      .collection("users")
-      .doc(decoded.uid)
-      .get();
+    firebaseStage = "get-firestore";
+    const db = getFirebaseAdminDb();
+    firebaseStage = "read-user";
+    const user = await db.collection("users").doc(decoded.uid).get();
     if (
       !user.exists ||
       user.data()?.active !== true ||
@@ -92,6 +84,7 @@ export async function POST(request: Request) {
         { status: 403 },
       );
     }
+    firebaseStage = "create-session-cookie";
     const sessionCookie = await auth.createSessionCookie(parsed.data.idToken, {
       expiresIn: FIREBASE_SESSION_MAX_AGE_SECONDS * 1000,
     });
@@ -105,8 +98,9 @@ export async function POST(request: Request) {
     });
     return Response.json({ role });
   } catch (error) {
-    const code = safeErrorCode(error);
-    console.error("[firebase-auth] session creation failed", { code });
+    const diagnostic = getSanitizedServerError(error, firebaseStage);
+    console.error("[firebase-auth] session creation failed", diagnostic);
+    const { code } = diagnostic;
     const status = code.startsWith("auth/") ? 401 : 503;
     return Response.json(
       {
