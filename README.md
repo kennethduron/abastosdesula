@@ -21,6 +21,9 @@ La aplicación estará disponible en [http://localhost:3000](http://localhost:30
 En builds de producción registra una PWA instalable; consulta su política de
 cache en [`docs/pwa.md`](docs/pwa.md).
 
+La preparación y las variables de Vercel están documentadas en
+[`docs/vercel-production.md`](docs/vercel-production.md).
+
 ## Validaciones
 
 ```bash

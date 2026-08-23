@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-PWA completada; siguiente fase: preparación y auditoría de Vercel.
+Preparación Vercel en curso; deploy bloqueado por credenciales Firebase ausentes.
 
 ## Fases terminadas
 
@@ -98,6 +98,15 @@ PWA completada; siguiente fase: preparación y auditoría de Vercel.
   escenario Firebase se ejecuta por separado y permanece excluido de la suite
   estándar.
 
+### Preparación Vercel
+
+- Rama: `chore/vercel-production-demo`.
+- CLI autenticada y team identificado.
+- Confirmado que no existe aún el proyecto Vercel `abastosdesula` y la URL
+  objetivo devuelve `DEPLOYMENT_NOT_FOUND`.
+- Node.js fijado a `22.x` y checklist de variables/deploy documentado.
+- No se creó proyecto ni deployment incompleto sin Firebase remoto.
+
 ## Decisiones
 
 - Monolito modular.
@@ -119,6 +128,5 @@ PWA completada; siguiente fase: preparación y auditoría de Vercel.
 
 ## Siguiente fase
 
-Integrar `feat/pwa` y preparar Vercel sin desplegar hasta confirmar autenticación
-y variables del proyecto. La activación remota de Firebase sigue pendiente de
-credenciales seguras.
+Obtener credenciales seguras de Firebase, activar Rules/seed, crear el proyecto
+Vercel `abastosdesula`, configurar variables y ejecutar auditoría HTTPS completa.
