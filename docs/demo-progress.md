@@ -2,7 +2,7 @@
 
 ## Fase actual
 
-Perfil, catálogo y carrito completados; siguiente fase: solicitud de cotización.
+Solicitud de cotización mock completada; siguiente fase: dashboard y CRM.
 
 ## Fases terminadas
 
@@ -41,6 +41,14 @@ Perfil, catálogo y carrito completados; siguiente fase: solicitud de cotizació
 - Regla monocomerciante con conflicto explícito y opción segura para reemplazar.
 - Drawer responsive y consulta opcional por WhatsApp demo.
 
+### Solicitud de cotización
+
+- Rama: `feat/quote-request-flow`
+- Formulario validado con React Hook Form, Zod estricto y mensajes accesibles.
+- Tipos de cliente, teléfono, WhatsApp opcional, modalidad y observaciones.
+- Solicitud, historial inicial y actividad persistidos localmente para el CRM demo.
+- Confirmación explícita sin envío de mensajes ni escrituras a servicios reales.
+
 ## Decisiones
 
 - Monolito modular.
@@ -53,8 +61,8 @@ Perfil, catálogo y carrito completados; siguiente fase: solicitud de cotizació
 ## Problemas conocidos
 
 - Firebase, autenticación y persistencia real todavía no están conectados.
-- El carrito todavía no incluye el formulario estructurado de solicitud.
+- La persistencia sigue siendo local; Firebase todavía no está conectado.
 
 ## Siguiente fase
 
-Integrar `feat/merchant-profile-cart` y construir el formulario de solicitud mock con React Hook Form, Zod y confirmación persistente.
+Integrar `feat/quote-request-flow` y crear `feat/merchant-dashboard-crm` para consumir solicitudes persistidas, mostrar métricas y cambiar estados con historial.

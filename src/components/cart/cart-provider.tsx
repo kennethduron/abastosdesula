@@ -52,6 +52,7 @@ interface CartContextValue {
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
+  completeCart: () => void;
   openCart: () => void;
 }
 
@@ -132,6 +133,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     updateQuantity,
     removeItem,
     clearCart,
+    completeCart: () => saveCart(emptyCart()),
     openCart: () => setDrawerOpen(true),
   };
 

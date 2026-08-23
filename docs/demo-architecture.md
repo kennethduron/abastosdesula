@@ -22,6 +22,7 @@ src/domain (reglas y modelos)
 - `src/domain`: entidades y reglas que no dependen de React, Next.js ni Firebase.
 - `src/data/repositories`: contratos de persistencia y consultas.
 - `src/data/adapters/mock`: implementación reproducible para desarrollo y QA.
+- `src/data/adapters/browser`: persistencia local temporal para demostrar flujos entre comprador y CRM antes de Firebase.
 - `src/data/repository-provider.ts`: punto de composición actual. Cambiar el proveedor no cambia la UI.
 - `src/app`: Server Components por defecto. Los Client Components quedan limitados a búsqueda, filtros, carrito y otras interacciones reales.
 

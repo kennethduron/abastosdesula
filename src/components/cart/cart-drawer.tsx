@@ -4,6 +4,7 @@ import { Minus, Plus, ShoppingCart, Trash2, X } from "lucide-react";
 import Image from "next/image";
 
 import { useCart } from "./cart-provider";
+import { QuoteRequestForm } from "./quote-request-form";
 
 const formatMoney = (amountMinor: number) =>
   new Intl.NumberFormat("es-HN", {
@@ -159,34 +160,39 @@ export function CartDrawer({
               ))}
             </div>
 
-            <div className="border-t border-slate-200 bg-white p-5 shadow-[0_-12px_30px_rgba(7,26,51,0.06)]">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-bold text-slate-500">
-                  Subtotal demo
-                </span>
-                <strong className="text-xl font-extrabold text-brand-navy">
-                  {formatMoney(subtotalMinor)}
-                </strong>
-              </div>
-              <p className="mt-2 text-xs leading-5 text-slate-500">
-                Precios de referencia ficticios. El comerciante confirmará
-                disponibilidad y cotización.
-              </p>
-              <a
-                href={`https://wa.me/${cart.items[0]?.whatsappDemo ?? "50400000000"}?text=${whatsappMessage}`}
-                target="_blank"
-                rel="noreferrer"
-                className="button-whatsapp mt-4 w-full"
-              >
-                Consultar por WhatsApp demo
-              </a>
-              <button
-                type="button"
-                onClick={clearCart}
-                className="mt-2 min-h-11 w-full rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-brand-blue"
-              >
-                Vaciar carrito
-              </button>
+            <div className="max-h-[68vh] overflow-y-auto border-t border-slate-200 bg-white p-5 shadow-[0_-12px_30px_rgba(7,26,51,0.06)]">
+              {cart.items.length > 0 && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">
+                      Subtotal demo
+                    </span>
+                    <strong className="text-xl font-extrabold text-brand-navy">
+                      {formatMoney(subtotalMinor)}
+                    </strong>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Precios de referencia ficticios. El comerciante confirmará
+                    disponibilidad y cotización.
+                  </p>
+                  <a
+                    href={`https://wa.me/${cart.items[0].whatsappDemo}?text=${whatsappMessage}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="button-whatsapp mt-4 w-full"
+                  >
+                    Consultar por WhatsApp demo
+                  </a>
+                  <button
+                    type="button"
+                    onClick={clearCart}
+                    className="mt-2 min-h-11 w-full rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-brand-blue"
+                  >
+                    Vaciar carrito
+                  </button>
+                </>
+              )}
+              <QuoteRequestForm onClose={onClose} />
             </div>
           </aside>
         </div>
