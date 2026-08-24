@@ -12,10 +12,10 @@ test("access page exposes a safe local fallback without Firebase secrets", async
   await page.goto("/acceso");
 
   await expect(
-    page.getByRole("heading", { name: "Inicia sesión en la demo" }),
+    page.getByRole("heading", { name: "Ingresa a tu cuenta" }),
   ).toBeVisible();
   await expect(
-    page.getByText("Firebase pendiente de configuración"),
+    page.getByText("Servicio de acceso temporalmente no disponible"),
   ).toBeVisible();
   await expect(page.locator('input[type="password"]')).toHaveCount(0);
   const scrollWidth = await page.evaluate(
@@ -38,7 +38,7 @@ test("server endpoints fail closed when Firebase Admin is unavailable", async ({
   });
   expect(session.status()).toBe(503);
   await expect(session.json()).resolves.toEqual({
-    error: "Firebase no configurado.",
+    error: "Servicio temporalmente no disponible.",
   });
 
   const quote = await request.post("/api/quote-requests", {
@@ -46,6 +46,6 @@ test("server endpoints fail closed when Firebase Admin is unavailable", async ({
   });
   expect(quote.status()).toBe(503);
   await expect(quote.json()).resolves.toEqual({
-    error: "Firebase no configurado.",
+    error: "Servicio temporalmente no disponible.",
   });
 });

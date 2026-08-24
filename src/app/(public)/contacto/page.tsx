@@ -4,7 +4,7 @@ import { Container } from "@/components/layout/container";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
-  title: "Contacto demo | Central de Abastos de Sula",
+  title: "Contacto | Central de Abastos de Sula",
 };
 
 export default function ContactPage() {
@@ -13,12 +13,12 @@ export default function ContactPage() {
       <Container>
         <section className="mx-auto max-w-2xl rounded-3xl border border-border bg-white p-8 text-center shadow-sm sm:p-12">
           <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-            Canal demostrativo
+            Atención institucional
           </p>
           <h1 className="mt-4 text-4xl font-black text-brand-navy">Contacto</h1>
           <p className="mt-4 leading-7 text-slate-600">
-            Los canales oficiales se publicarán cuando sean confirmados por la
-            institución. El enlace actual abre un mensaje de demostración.
+            Escríbenos para conocer más sobre comerciantes, productos y
+            oportunidades de colaboración con la institución.
           </p>
           <a
             href={siteConfig.whatsappDemoUrl}
@@ -26,7 +26,7 @@ export default function ContactPage() {
             rel="noreferrer"
             className="button-primary mt-7"
           >
-            Abrir WhatsApp demo
+            Contactar por WhatsApp
           </a>
         </section>
       </Container>

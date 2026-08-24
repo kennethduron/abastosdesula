@@ -15,8 +15,8 @@ import {
 } from "@/data/adapters/mock/demo-data";
 
 export const metadata: Metadata = {
-  title: "Administración demo | Central de Abastos de Sula",
-  description: "Vista institucional demostrativa de actividad agregada.",
+  title: "Administración institucional | Central de Abastos de Sula",
+  description: "Vista institucional de actividad y gestión operativa.",
   robots: { index: false, follow: false },
 };
 

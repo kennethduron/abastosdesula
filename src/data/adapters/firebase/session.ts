@@ -67,9 +67,7 @@ export async function getAppSessionState(): Promise<AppSessionState> {
         role,
         businessId,
         displayName:
-          typeof user.displayName === "string"
-            ? user.displayName
-            : "Usuario demo",
+          typeof user.displayName === "string" ? user.displayName : "Usuario",
       },
     };
   } catch (error) {

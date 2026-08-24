@@ -56,7 +56,7 @@ async function submitQuote(
   await cart.getByLabel("Nombre completo").fill(customerName);
   await cart.getByLabel("Tipo de cliente").selectOption("business");
   await cart.getByLabel("Teléfono").fill("99990000");
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await cart.getByRole("button", { name: "Enviar solicitud" }).click();
   await expect(page.getByTestId("quote-confirmation")).toBeVisible();
 }
 
@@ -258,10 +258,7 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
     path: "artifacts/firebase/admin-aggregate-only-1440x900.png",
     fullPage: true,
   });
-  await page
-    .getByRole("button", { name: "Cerrar sesión demo" })
-    .first()
-    .click();
+  await page.getByRole("button", { name: "Cerrar sesión" }).first().click();
   await expect(page).toHaveURL(/\/acceso$/);
   expect(consoleErrors).toEqual([]);
 });

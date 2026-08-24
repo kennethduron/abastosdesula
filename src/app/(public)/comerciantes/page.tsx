@@ -12,7 +12,7 @@ import { getRepositories } from "@/data/repository-provider";
 export const metadata: Metadata = {
   title: "Directorio de comerciantes | Central de Abastos de Sula",
   description:
-    "Explora perfiles y catálogos demostrativos de comerciantes organizados por categoría.",
+    "Explora perfiles y catálogos de comerciantes organizados por categoría.",
 };
 
 export default async function MerchantsPage() {
@@ -69,15 +69,14 @@ export default async function MerchantsPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/8 px-3 py-1.5 text-xs font-extrabold text-brand-green-light backdrop-blur-sm">
               <Sparkles className="size-3.5" aria-hidden="true" />
-              Directorio multicomercio · Datos demo
+              Directorio de comerciantes
             </div>
             <h1 className="mt-5 text-[clamp(2.4rem,6vw,4.6rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-white">
               Encuentra comerciantes para cada necesidad
             </h1>
             <p className="mt-6 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">
-              Explora perfiles demostrativos por categoría, conoce productos
-              destacados y descubre cómo funcionará el contacto directo dentro
-              de la plataforma.
+              Explora perfiles por categoría, conoce productos destacados y
+              contacta directamente con el proveedor que necesitas.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-white/85 sm:text-sm">
@@ -86,7 +85,7 @@ export default async function MerchantsPage() {
                   className="size-4 text-brand-green-light"
                   aria-hidden="true"
                 />
-                {directoryMerchants.length} perfiles demo
+                {directoryMerchants.length} perfiles disponibles
               </span>
               <span className="inline-flex items-center gap-2 rounded-xl border border-white/12 bg-brand-navy/35 px-3.5 py-2.5 backdrop-blur-sm">
                 <PackageSearch
@@ -100,7 +99,7 @@ export default async function MerchantsPage() {
                   className="size-4 text-brand-green-light"
                   aria-hidden="true"
                 />
-                Información demostrativa
+                Información comercial
               </span>
             </div>
           </div>

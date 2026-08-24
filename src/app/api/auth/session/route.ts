@@ -32,7 +32,7 @@ export async function GET() {
 export async function POST(request: Request) {
   if (!isFirebaseAdminConfigured()) {
     return Response.json(
-      { error: "Firebase no configurado." },
+      { error: "Servicio temporalmente no disponible." },
       { status: 503 },
     );
   }

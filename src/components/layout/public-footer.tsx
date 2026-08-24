@@ -67,8 +67,8 @@ export function PublicFooter() {
             Contacto institucional
           </h3>
           <p className="mt-4 text-sm leading-6 text-slate-300">
-            Los canales oficiales se publicarán cuando sean confirmados por la
-            institución.
+            Conecta con la institución para conocer servicios, comerciantes y
+            oportunidades de colaboración.
           </p>
           <a
             href={siteConfig.whatsappDemoUrl}
@@ -77,7 +77,7 @@ export function PublicFooter() {
             className="mt-5 inline-flex items-center gap-2 rounded-lg text-sm font-bold text-brand-green-light hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-green-light"
           >
             <MessageCircle className="size-4" aria-hidden="true" />
-            Abrir WhatsApp demo
+            Contactar por WhatsApp
           </a>
         </div>
       </Container>
@@ -91,7 +91,7 @@ export function PublicFooter() {
                 className="size-3.5 text-brand-green-light"
                 aria-hidden="true"
               />
-              Fotografías de demostración: Unsplash
+              Imágenes de producto: Unsplash
             </span>
             <span className="text-slate-300">Desarrollado por Ken Code</span>
           </div>

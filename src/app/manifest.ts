@@ -40,7 +40,7 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: "Ver comerciantes",
         short_name: "Comerciantes",
-        description: "Abrir el directorio demo de comerciantes.",
+        description: "Abrir el directorio de comerciantes.",
         url: "/comerciantes",
         icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }],
       },

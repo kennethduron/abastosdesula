@@ -10,9 +10,9 @@ import { getAppSessionState } from "@/data/adapters/firebase/session";
 import { demoBusinesses, demoProducts } from "@/data/adapters/mock/demo-data";
 
 export const metadata: Metadata = {
-  title: "Panel demo del comerciante | Central de Abastos de Sula",
+  title: "Panel del comerciante | Central de Abastos de Sula",
   description:
-    "Panel demostrativo para gestionar solicitudes y clientes de un comerciante.",
+    "Gestiona solicitudes, clientes y actividad comercial desde un solo lugar.",
   robots: { index: false, follow: false },
 };
 

@@ -17,7 +17,7 @@ export function MerchantCard({ merchant }: { merchant: DemoMerchant }) {
           className="premium-image object-cover transition-transform duration-500"
         />
         <span className="absolute top-3 left-3 rounded-full bg-brand-navy/85 px-2.5 py-1 text-[0.65rem] font-extrabold tracking-wide text-white uppercase backdrop-blur-sm">
-          Comercio demo
+          Comerciante destacado
         </span>
       </div>
       <div className="flex flex-1 flex-col p-5">
@@ -30,7 +30,7 @@ export function MerchantCard({ merchant }: { merchant: DemoMerchant }) {
           </div>
           {merchant.verified && (
             <span
-              title="Perfil verificado en la demostración"
+              title="Perfil verificado"
               className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-green-pale text-brand-green"
             >
               <BadgeCheck className="size-4" aria-hidden="true" />
@@ -51,7 +51,7 @@ export function MerchantCard({ merchant }: { merchant: DemoMerchant }) {
             href={siteConfig.whatsappDemoUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label={`Contactar a ${merchant.name} por WhatsApp, enlace demo`}
+            aria-label={`Contactar a ${merchant.name} por WhatsApp`}
             className="grid size-10 place-items-center rounded-xl bg-brand-green text-white transition-colors hover:bg-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
           >
             <MessageCircle className="size-4" aria-hidden="true" />

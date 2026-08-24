@@ -7,8 +7,8 @@ async function openCleanPanel(page: Page) {
 }
 
 async function enterBusiness(page: Page, businessId = "business-frutas-valle") {
-  await page.getByLabel("Comerciante demo").selectOption(businessId);
-  await page.getByRole("button", { name: "Entrar al panel demo" }).click();
+  await page.getByLabel("Comerciante").selectOption(businessId);
+  await page.getByRole("button", { name: "Entrar al panel" }).click();
   await expect(
     page.getByRole("heading", { name: "Resumen general" }),
   ).toBeVisible();
@@ -18,7 +18,9 @@ test("demo access gate opens a persistent merchant session", async ({
   page,
 }) => {
   await openCleanPanel(page);
-  await expect(page.getByText("Acceso local de demostración")).toBeVisible();
+  await expect(
+    page.getByText("Acceso de revisión", { exact: true }),
+  ).toBeVisible();
   await enterBusiness(page);
   await expect(
     page.getByText("Comercial Frutas del Valle").first(),
@@ -47,7 +49,7 @@ test("a public quote appears in the matching merchant CRM", async ({
   const cart = page.getByRole("dialog", { name: "Tu solicitud" });
   await cart.getByLabel("Nombre completo").fill("Cliente Integración CRM");
   await cart.getByLabel("Teléfono").fill("99990000");
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await cart.getByRole("button", { name: "Enviar solicitud" }).click();
   await expect(page.getByTestId("quote-confirmation")).toBeVisible();
 
   await page.goto("/panel");
@@ -86,10 +88,7 @@ test("business isolation hides requests from other merchants", async ({
   await enterBusiness(page);
   await expect(page.getByText("Cliente aislado La Huerta")).toHaveCount(0);
 
-  await page
-    .getByRole("button", { name: "Cerrar sesión demo" })
-    .first()
-    .click();
+  await page.getByRole("button", { name: "Cerrar sesión" }).first().click();
   await enterBusiness(page, "business-la-huerta");
   await expect(
     page.getByRole("button", { name: /Cliente aislado La Huerta/ }),

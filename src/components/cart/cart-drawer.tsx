@@ -30,7 +30,7 @@ export function CartDrawer({
     openCart,
   } = useCart();
   const whatsappMessage = encodeURIComponent(
-    `Hola, quiero consultar esta solicitud demo para ${cart.items[0]?.businessName ?? "el comerciante"}:\n${cart.items.map((item) => `- ${item.productName}: ${item.quantity} ${item.unit}`).join("\n")}`,
+    `Hola, quiero consultar esta solicitud para ${cart.items[0]?.businessName ?? "el comerciante"}:\n${cart.items.map((item) => `- ${item.productName}: ${item.quantity} ${item.unit}`).join("\n")}`,
   );
 
   return (
@@ -165,15 +165,15 @@ export function CartDrawer({
                 <>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-slate-500">
-                      Subtotal demo
+                      Subtotal estimado
                     </span>
                     <strong className="text-xl font-extrabold text-brand-navy">
                       {formatMoney(subtotalMinor)}
                     </strong>
                   </div>
                   <p className="mt-2 text-xs leading-5 text-slate-500">
-                    Precios de referencia ficticios. El comerciante confirmará
-                    disponibilidad y cotización.
+                    Precios de referencia sujetos a confirmación. El comerciante
+                    indicará disponibilidad y cotización.
                   </p>
                   <a
                     href={`https://wa.me/${cart.items[0].whatsappDemo}?text=${whatsappMessage}`}
@@ -181,7 +181,7 @@ export function CartDrawer({
                     rel="noreferrer"
                     className="button-whatsapp mt-4 w-full"
                   >
-                    Consultar por WhatsApp demo
+                    Consultar por WhatsApp
                   </a>
                   <button
                     type="button"

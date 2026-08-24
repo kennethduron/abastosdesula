@@ -80,7 +80,7 @@ export function MerchantCatalog({
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-            Catálogo del comerciante · Demo
+            Catálogo del comerciante
           </p>
           <h2
             id="catalog-heading"
@@ -146,7 +146,7 @@ export function MerchantCatalog({
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.025]"
                   />
                   <span className="absolute top-3 left-3 rounded-full bg-white/92 px-2.5 py-1 text-[0.65rem] font-extrabold text-brand-green shadow-sm">
-                    Disponible · Demo
+                    Disponible
                   </span>
                 </div>
                 <div className="p-4">

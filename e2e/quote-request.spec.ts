@@ -26,10 +26,10 @@ test("public customer creates a validated demo quote request", async ({
   await cart
     .getByLabel("Observaciones (opcional)")
     .fill("Cotizar para la próxima semana.");
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await cart.getByRole("button", { name: "Enviar solicitud" }).click();
 
   await expect(page.getByTestId("quote-confirmation")).toBeVisible();
-  await expect(page.getByText("Solicitud demo recibida")).toBeVisible();
+  await expect(page.getByText("Solicitud recibida")).toBeVisible();
   const stored = await page.evaluate(() =>
     JSON.parse(window.localStorage.getItem("abastos-demo-quotes-v1") ?? "[]"),
   );
@@ -47,7 +47,7 @@ test("quote form blocks incomplete customer data", async ({ page }) => {
   await openCleanQuoteFlow(page);
   const cart = page.getByRole("dialog", { name: "Tu solicitud" });
 
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await cart.getByRole("button", { name: "Enviar solicitud" }).click();
 
   await expect(page.getByTestId("quote-confirmation")).toHaveCount(0);
   await expect(cart.getByLabel("Nombre completo")).toBeFocused();
@@ -59,7 +59,7 @@ test("captures the completed quote flow on mobile", async ({ page }) => {
   const cart = page.getByRole("dialog", { name: "Tu solicitud" });
   await cart.getByLabel("Nombre completo").fill("Cliente Demo");
   await cart.getByLabel("Teléfono").fill("99990000");
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await cart.getByRole("button", { name: "Enviar solicitud" }).click();
   await expect(page.getByTestId("quote-confirmation")).toBeVisible();
   await page.screenshot({
     path: "artifacts/cart/quote-confirmation-390x844.png",

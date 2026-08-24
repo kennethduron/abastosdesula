@@ -5,7 +5,7 @@ import { Container } from "@/components/layout/container";
 import { demoAnnouncements } from "@/data/home-data";
 
 export const metadata: Metadata = {
-  title: "Noticias demo | Central de Abastos de Sula",
+  title: "Noticias | Central de Abastos de Sula",
 };
 
 export default function NewsPage() {
@@ -13,7 +13,7 @@ export default function NewsPage() {
     <main id="contenido-principal" className="bg-slate-50 py-12 sm:py-16">
       <Container>
         <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-          Contenido editorial demo
+          Actualidad y recursos
         </p>
         <h1 className="mt-3 text-4xl font-black text-brand-navy sm:text-5xl">
           Noticias y guías
@@ -37,7 +37,7 @@ export default function NewsPage() {
                 href={item.href}
                 className="mt-5 inline-block font-bold text-brand-blue"
               >
-                Leer contenido demo →
+                Leer artículo →
               </Link>
             </article>
           ))}

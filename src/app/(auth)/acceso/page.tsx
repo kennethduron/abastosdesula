@@ -9,7 +9,7 @@ import {
 import { getFirebaseClientConfigStatus } from "@/data/adapters/firebase/config";
 
 export const metadata: Metadata = {
-  title: "Acceso demo | Central de Abastos de Sula",
+  title: "Acceso | Central de Abastos de Sula",
   description: "Acceso de comerciantes y administración institucional.",
   robots: { index: false, follow: false },
 };
@@ -37,7 +37,7 @@ export default async function AccessPage({
           Acceso seguro
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-brand-navy sm:text-4xl">
-          Inicia sesión en la demo
+          Ingresa a tu cuenta
         </h1>
         <p className="mt-3 leading-7 text-slate-600">
           Acceso reservado para comerciantes y administración institucional.

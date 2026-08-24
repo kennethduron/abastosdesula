@@ -36,26 +36,24 @@ export function LoginForm({
           <TriangleAlert className="mt-0.5 size-5 shrink-0 text-amber-700" />
           <div>
             <h2 className="font-extrabold text-amber-950">
-              {serviceUnavailable
-                ? "Servicio de acceso temporalmente no disponible"
-                : "Firebase pendiente de configuración"}
+              Servicio de acceso temporalmente no disponible
             </h2>
             <p className="mt-2 text-sm leading-6 text-amber-900/80">
               {serviceUnavailable
-                ? "La configuración segura del servidor necesita atención. Intenta nuevamente más tarde."
+                ? "No pudimos completar el acceso en este momento. Intenta nuevamente más tarde."
                 : localFallbackAvailable
-                  ? "Firebase no está configurado. Los paneles locales demo están disponibles sólo para esta ejecución de QA."
-                  : "La configuración de acceso todavía no está completa. Intenta nuevamente más tarde."}
+                  ? "Puedes continuar con el acceso de revisión autorizado."
+                  : "El servicio de acceso todavía no está disponible. Intenta nuevamente más tarde."}
             </p>
           </div>
         </div>
         {localFallbackAvailable && (
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <a href="/panel" className="button-secondary">
-              Panel comerciante local
+              Panel del comerciante
             </a>
             <a href="/admin" className="button-secondary">
-              Admin institucional local
+              Administración
             </a>
           </div>
         )}
@@ -93,10 +91,9 @@ export function LoginForm({
             result.role === "institutional_admin" ? "/admin" : "/panel",
           );
         } catch (submissionError) {
+          void submissionError;
           setError(
-            submissionError instanceof Error
-              ? submissionError.message
-              : "No fue posible iniciar sesión.",
+            "No pudimos iniciar sesión. Revisa tus credenciales e inténtalo de nuevo.",
           );
           setPending(false);
         }
@@ -152,7 +149,7 @@ export function LoginForm({
         {pending ? "Verificando…" : "Iniciar sesión"}
       </button>
       <p className="text-center text-xs leading-5 text-slate-500">
-        Las credenciales demo se configuran fuera del repositorio.
+        Acceso exclusivo para comerciantes y personal autorizado.
       </p>
     </form>
   );

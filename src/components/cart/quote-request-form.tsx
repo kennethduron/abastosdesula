@@ -72,7 +72,7 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
         completeCart();
       } catch {
         setSubmissionError(
-          "No fue posible conectar con el backend. Intenta nuevamente.",
+          "No fue posible registrar la solicitud. Intenta nuevamente.",
         );
       }
       return;
@@ -102,12 +102,11 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
           aria-hidden="true"
         />
         <h3 className="mt-3 text-lg font-extrabold text-brand-navy">
-          Solicitud demo recibida
+          Solicitud recibida
         </h3>
         <p className="mt-2 text-xs leading-5 text-slate-600">
-          Quedó guardada en el CRM demo con estado Nueva
-          {firebaseAvailable ? " mediante Firebase" : " en este navegador"}. No
-          se envió ningún mensaje real.
+          Tu solicitud quedó registrada con estado Nueva. El comerciante podrá
+          revisarla desde su panel.
         </p>
         <p className="mt-3 text-[0.65rem] font-bold break-all text-brand-green">
           {confirmationId}
@@ -191,7 +190,7 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
           >
             <option value="coordinate">Coordinar con el comerciante</option>
             <option value="pickup">Retiro</option>
-            <option value="delivery">Entrega demo</option>
+            <option value="delivery">Entrega</option>
           </select>
         </label>
         <label className="block text-xs font-bold text-slate-600">
@@ -219,12 +218,11 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
         className="button-primary mt-4 w-full"
       >
         <Send className="size-4" aria-hidden="true" />
-        Enviar solicitud demo
+        Enviar solicitud
       </button>
       <p className="mt-3 text-center text-[0.68rem] leading-5 text-slate-500">
-        {firebaseAvailable
-          ? "Al enviar, aceptas guardar esta información en el backend Firebase de la demo."
-          : "Al enviar, aceptas guardar esta información únicamente en el almacenamiento local de la demo."}
+        Al enviar, autorizas el uso de esta información para gestionar tu
+        solicitud con el comerciante seleccionado.
       </p>
     </form>
   );

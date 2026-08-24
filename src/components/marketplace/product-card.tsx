@@ -21,7 +21,7 @@ export function ProductCard({ product }: { product: DemoProduct }) {
             className="premium-image object-cover transition-transform duration-500"
           />
           <span className="absolute top-3 left-3 rounded-full bg-white/90 px-2 py-1 text-[0.62rem] font-extrabold tracking-wide text-brand-green uppercase shadow-sm backdrop-blur-sm">
-            Precio demo
+            Precio de referencia
           </span>
         </div>
         <div className="p-4">

@@ -34,7 +34,7 @@ export function PublicHeader() {
             href={siteConfig.whatsappDemoUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label="Abrir WhatsApp demo"
+            aria-label="Contactar por WhatsApp"
             className="inline-flex size-11 items-center justify-center gap-2 rounded-xl bg-brand-green text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-green-dark hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue sm:w-auto sm:px-4"
           >
             <MessageCircle className="size-4" aria-hidden="true" />

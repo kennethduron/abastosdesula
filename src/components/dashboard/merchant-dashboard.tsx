@@ -139,14 +139,14 @@ function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
         <Brand />
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-brand-green-pale px-3 py-1.5 text-xs font-bold text-brand-green-dark">
           <Store className="size-4" aria-hidden="true" />
-          Acceso local de demostración
+          Acceso de revisión
         </div>
         <h1 className="mt-4 text-3xl font-black tracking-tight text-brand-navy sm:text-4xl">
           Panel del comerciante
         </h1>
         <p className="mt-3 leading-7 text-slate-600">
-          Selecciona un negocio ficticio para explorar su CRM. Esta sesión no es
-          autenticación real y solo guarda datos en este navegador.
+          Selecciona un comercio para revisar la gestión de solicitudes,
+          clientes y productos.
         </p>
         <form
           className="mt-7 space-y-5"
@@ -162,7 +162,7 @@ function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
           }}
         >
           <label className="block text-sm font-bold text-brand-navy">
-            Comerciante demo
+            Comerciante
             <select
               value={businessId}
               onChange={(event) => setBusinessId(event.target.value)}
@@ -176,12 +176,12 @@ function DemoAccessGate({ businesses }: { businesses: DashboardBusiness[] }) {
             </select>
           </label>
           <button type="submit" className="button-primary w-full">
-            Entrar al panel demo
+            Entrar al panel
             <ChevronRight className="size-4" aria-hidden="true" />
           </button>
         </form>
         <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-          Entorno de prueba · Sin pagos, mensajes ni operaciones reales
+          Acceso de revisión · Sin operaciones financieras
         </p>
       </section>
     </main>
@@ -256,9 +256,7 @@ function DashboardView({
         <DashboardNav />
         <div className="mt-auto border-t border-white/10 pt-5">
           <p className="text-xs text-slate-400">
-            {firebaseAuthenticated
-              ? "Sesión Firebase de demostración"
-              : "Sesión local de demostración"}
+            {firebaseAuthenticated ? "Sesión protegida" : "Sesión de revisión"}
           </p>
           <button
             type="button"
@@ -270,7 +268,7 @@ function DashboardView({
             className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
           >
             <LogOut className="size-4" aria-hidden="true" />
-            Cerrar sesión demo
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -292,13 +290,13 @@ function DashboardView({
             </p>
             <p className="text-xs text-slate-500">
               {firebaseAuthenticated
-                ? "Panel demo · Sincronizado"
-                : "Panel demo · Datos locales"}
+                ? "Panel comercial · Información actualizada"
+                : "Panel comercial · Modo de revisión"}
             </p>
           </div>
           <button
             type="button"
-            aria-label="Notificaciones demo"
+            aria-label="Notificaciones"
             className="relative grid size-11 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-blue"
           >
             <Bell className="size-5" />
@@ -313,7 +311,7 @@ function DashboardView({
               <CircleUserRound className="size-5" />
             </span>
             <span className="text-sm font-bold text-brand-navy">
-              Comerciante demo
+              Comerciante
             </span>
           </div>
         </div>
@@ -329,7 +327,7 @@ function DashboardView({
               }
               className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-rose-700 hover:bg-rose-50"
             >
-              <LogOut className="size-4" /> Cerrar sesión demo
+              <LogOut className="size-4" /> Cerrar sesión
             </button>
           </div>
         )}
@@ -350,12 +348,12 @@ function DashboardView({
               </h1>
               <p className="mt-1 text-sm text-slate-500">
                 {firebaseAuthenticated
-                  ? "Solicitudes sincronizadas de forma segura por negocio."
+                  ? "Solicitudes actualizadas de forma segura por negocio."
                   : "Solicitudes y actividad guardadas en este navegador."}
               </p>
             </div>
             <span className="w-fit rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
-              Entorno demo
+              Operación comercial
             </span>
           </div>
 
@@ -377,7 +375,7 @@ function DashboardView({
             />
             <MetricCard
               icon={Boxes}
-              label="Productos demo"
+              label="Productos"
               value={business.productCount}
               tone="violet"
             />
@@ -504,7 +502,7 @@ function BusinessIdentity({ business }: { business: DashboardBusiness }) {
       </span>
       <div className="min-w-0">
         <p className="truncate text-sm font-extrabold">{business.name}</p>
-        <p className="mt-1 text-xs text-brand-green-light">Comerciante demo</p>
+        <p className="mt-1 text-xs text-brand-green-light">Cuenta comercial</p>
       </div>
     </div>
   );
@@ -581,7 +579,7 @@ function MetricCard({
         {value}
       </p>
       <p className="mt-2 text-[0.7rem] font-semibold text-brand-green-dark">
-        Datos locales demo
+        Información disponible
       </p>
     </article>
   );
@@ -679,7 +677,7 @@ function StatusOverview({ requests }: { requests: QuoteRequest[] }) {
         Actividad por estado
       </h2>
       <p className="mt-1 text-sm text-slate-500">
-        Distribución actual de solicitudes demo.
+        Distribución actual de solicitudes.
       </p>
       <div className="mt-6 space-y-4">
         {values.map((item) => (

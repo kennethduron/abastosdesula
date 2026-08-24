@@ -19,9 +19,10 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://abastosdesula.vercel.app"),
   title: "Central de Abastos de Sula | Productos y Comerciantes",
   description:
-    "Encuentra comerciantes, productos frescos y opciones de cotización en la Central de Abastos de Sula.",
+    "Conecta con comerciantes, explora productos frescos y solicita cotizaciones en la Central de Abastos de Sula.",
   manifest: "/manifest.webmanifest",
   applicationName: "Central de Abastos de Sula",
   appleWebApp: {
@@ -31,6 +32,26 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_HN",
+    url: "/",
+    siteName: "Central de Abastos de Sula",
+    title: "Central de Abastos de Sula",
+    description: "Comerciantes, productos y cotizaciones en un solo lugar.",
+    images: [
+      {
+        url: "/opengraph-image.png",
+        alt: "Central de Abastos de Sula: comerciantes, productos y cotizaciones en un solo lugar",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Central de Abastos de Sula",
+    description: "Comerciantes, productos y cotizaciones en un solo lugar.",
+    images: ["/opengraph-image.png"],
   },
 };
 

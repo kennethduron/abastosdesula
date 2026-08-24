@@ -99,7 +99,7 @@ export function toggleDemoCategoryVisibility(
     activities: [
       {
         id: `admin-activity-${crypto.randomUUID()}`,
-        description: `${categoryName} se marcó como ${hidden ? "visible" : "oculta"} en la configuración demo`,
+        description: `${categoryName} se marcó como ${hidden ? "visible" : "oculta"} en el catálogo`,
         createdAt: new Date().toISOString(),
       },
       ...state.activities,

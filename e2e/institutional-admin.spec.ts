@@ -7,9 +7,7 @@ async function openCleanAdmin(page: Page) {
 }
 
 async function enterAdmin(page: Page) {
-  await page
-    .getByRole("button", { name: "Entrar como administrador demo" })
-    .click();
+  await page.getByRole("button", { name: "Entrar a administración" }).click();
   await expect(
     page.getByRole("heading", { name: "Resumen de la plataforma" }),
   ).toBeVisible();
@@ -19,14 +17,12 @@ test("institutional demo gate exposes aggregate-only administration", async ({
   page,
 }) => {
   await openCleanAdmin(page);
-  await expect(
-    page.getByText("Acceso institucional de demostración"),
-  ).toBeVisible();
+  await expect(page.getByText("Acceso institucional")).toBeVisible();
   await enterAdmin(page);
   await expect(page.getByText("Comerciantes activos")).toBeVisible();
-  await expect(page.getByText("Solicitudes demo")).toBeVisible();
+  await expect(page.getByText("Solicitudes").first()).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Contenido demo" }),
+    page.getByRole("heading", { name: "Gestión de contenido" }),
   ).toBeVisible();
   await expect(page.getByText("Restaurante El Buen Sabor")).toHaveCount(0);
 });
@@ -37,7 +33,7 @@ test("merchant role cannot open institutional administration", async ({
   await page.goto("/panel");
   await page.evaluate(() => window.localStorage.clear());
   await page.reload();
-  await page.getByRole("button", { name: "Entrar al panel demo" }).click();
+  await page.getByRole("button", { name: "Entrar al panel" }).click();
   await page.goto("/admin");
 
   await expect(
@@ -58,9 +54,12 @@ test("admin changes merchant status and category visibility persistently", async
     .getByLabel("Estado de Comercial Frutas del Valle")
     .first();
   await merchantStatus.selectOption("pending");
-  await page.getByRole("button", { name: "Ocultar en demo" }).first().click();
+  await page
+    .getByRole("button", { name: "Ocultar del catálogo" })
+    .first()
+    .click();
   await expect(
-    page.getByRole("button", { name: "Mostrar en demo" }).first(),
+    page.getByRole("button", { name: "Mostrar en catálogo" }).first(),
   ).toBeVisible();
 
   await page.reload();
@@ -68,7 +67,7 @@ test("admin changes merchant status and category visibility persistently", async
     page.getByLabel("Estado de Comercial Frutas del Valle").first(),
   ).toHaveValue("pending");
   await expect(
-    page.getByRole("button", { name: "Mostrar en demo" }).first(),
+    page.getByRole("button", { name: "Mostrar en catálogo" }).first(),
   ).toBeVisible();
   await expect(page.getByText(/cambió a estado pending/)).toBeVisible();
 });

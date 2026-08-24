@@ -74,7 +74,7 @@ export async function createFirebaseQuoteRequest(
     type: "quote_request_created",
     entityType: "quote_request",
     entityId: quoteRef.id,
-    description: "Nueva solicitud demo recibida",
+    description: "Nueva solicitud recibida",
     isDemo: true,
     createdAt: timestamp,
   });
@@ -82,7 +82,7 @@ export async function createFirebaseQuoteRequest(
     id: notificationRef.id,
     businessId: input.businessId,
     type: "quote_request_created",
-    title: "Nueva solicitud demo",
+    title: "Nueva solicitud",
     body: "Hay una nueva solicitud pendiente de revisión.",
     entityType: "quote_request",
     entityId: quoteRef.id,

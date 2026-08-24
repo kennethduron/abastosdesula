@@ -175,21 +175,21 @@ export const demoProducts: DemoProduct[] = [
 // Contenido editorial ficticio para visualizar el módulo de noticias.
 export const demoAnnouncements: DemoAnnouncement[] = [
   {
-    eyebrow: "Guía de compra · Demo",
+    eyebrow: "Guía de compra",
     title: "Cómo preparar tu lista para cotizar más rápido",
     description:
       "Organiza cantidades, unidades y fechas antes de contactar a tus proveedores.",
     href: "/noticias/guia-para-cotizar",
   },
   {
-    eyebrow: "Plataforma · Demo",
+    eyebrow: "Plataforma",
     title: "Nuevas categorías para explorar productos",
     description:
       "Conoce cómo el directorio facilita la búsqueda por tipo de producto y comerciante.",
     href: "/noticias/categorias-de-productos",
   },
   {
-    eyebrow: "Comerciantes · Demo",
+    eyebrow: "Comerciantes",
     title: "Buenas prácticas para mantener un catálogo claro",
     description:
       "Consejos sencillos para presentar disponibilidad, unidades y precios de referencia.",

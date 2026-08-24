@@ -177,7 +177,7 @@ export function MerchantDirectory({
       <div className="mt-8 flex flex-col gap-3 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-            Directorio multicomercio · Demo
+            Directorio de comerciantes
           </p>
           <h2
             id="directory-results-heading"
@@ -215,8 +215,7 @@ export function MerchantDirectory({
             No encontramos coincidencias
           </h3>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
-            Prueba otro nombre o combina una categoría diferente con los datos
-            demostrativos disponibles.
+            Prueba otro nombre o selecciona una categoría diferente.
           </p>
           {hasFilters && (
             <button

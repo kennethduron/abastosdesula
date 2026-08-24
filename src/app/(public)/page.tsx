@@ -44,7 +44,7 @@ export default function HomePage() {
           <div className="pointer-events-auto max-w-2xl">
             <div className="hero-intro hero-intro-1 mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-brand-navy/40 px-3 py-1.5 text-xs font-bold text-brand-green-light shadow-lg backdrop-blur-md">
               <Sparkles className="size-3.5" aria-hidden="true" />
-              Mercado digital multicomercio
+              Mercado mayorista conectado
             </div>
 
             <h1 className="hero-intro hero-intro-2 text-[clamp(2.45rem,7vw,4.7rem)] leading-[0.98] font-extrabold tracking-[-0.055em] text-white">
@@ -148,9 +148,9 @@ export default function HomePage() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <Reveal variant="fade-left">
               <SectionHeading
-                eyebrow="Directorio multicomercio"
+                eyebrow="Comerciantes de la Central"
                 title="Comerciantes destacados"
-                description="Perfiles de demostración que muestran cómo podrás conocer especialidades y contactar proveedores."
+                description="Conoce sus especialidades, revisa su oferta y encuentra el proveedor adecuado para cada compra."
               />
             </Reveal>
             <Reveal delay={80}>
@@ -183,9 +183,9 @@ export default function HomePage() {
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <Reveal>
               <SectionHeading
-                eyebrow="Valores demostrativos"
+                eyebrow="Precios de referencia"
                 title="Productos de temporada"
-                description="Una muestra del catálogo que permitirá consultar presentaciones y precios de referencia."
+                description="Consulta presentaciones, unidades y valores de referencia para planificar mejor tus compras."
               />
             </Reveal>
             <Reveal delay={80}>
@@ -248,7 +248,7 @@ export default function HomePage() {
             <SectionHeading
               eyebrow="Conversaciones directas"
               title="Habla directamente con los comerciantes"
-              description="Consulta disponibilidad, presentaciones y opciones de compra mediante un enlace seguro de demostración. No se utiliza ningún número real."
+              description="Consulta disponibilidad, presentaciones y condiciones de compra por un canal directo y sencillo."
             />
             <a
               href={siteConfig.whatsappDemoUrl}
@@ -257,7 +257,7 @@ export default function HomePage() {
               className="button-whatsapp mt-7"
             >
               <MessageCircle className="size-5" aria-hidden="true" />
-              Abrir WhatsApp demo
+              Consultar por WhatsApp
             </a>
           </Reveal>
         </Container>
@@ -272,7 +272,7 @@ export default function HomePage() {
             <SectionHeading
               eyebrow="Contenido informativo"
               title="Noticias y anuncios"
-              description="Ejemplos de contenido que la institución podrá publicar cuando la plataforma esté operativa."
+              description="Consejos, novedades y recursos para compradores y comerciantes de la Central de Abastos de Sula."
             />
           </Reveal>
           <RevealGroup className="mt-9 grid gap-5 md:grid-cols-3">

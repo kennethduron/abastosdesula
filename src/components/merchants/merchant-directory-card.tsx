@@ -10,7 +10,7 @@ export function MerchantDirectoryCard({
   merchant: MerchantDirectoryItem;
 }) {
   const whatsappMessage = encodeURIComponent(
-    `Hola, vi el perfil demo de ${merchant.name} en la plataforma de Central de Abastos de Sula.`,
+    `Hola, vi el perfil de ${merchant.name} en la plataforma de Central de Abastos de Sula.`,
   );
 
   return (
@@ -28,7 +28,7 @@ export function MerchantDirectoryCard({
         />
         <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full border border-brand-green/20 bg-white/94 px-2.5 py-1 text-[0.7rem] font-extrabold text-brand-green shadow-sm backdrop-blur-sm">
           <span className="size-1.5 rounded-full bg-brand-green" />
-          Disponible · Demo
+          Disponible
         </span>
       </div>
 
@@ -44,7 +44,7 @@ export function MerchantDirectoryCard({
           </div>
           <span
             className="grid size-9 shrink-0 place-items-center rounded-xl bg-brand-green-pale text-brand-green"
-            title="Perfil de demostración"
+            title="Perfil verificado"
           >
             <BadgeCheck className="size-5" aria-hidden="true" />
           </span>
@@ -84,11 +84,11 @@ export function MerchantDirectoryCard({
             href={`https://wa.me/${merchant.whatsappDemo}?text=${whatsappMessage}`}
             target="_blank"
             rel="noreferrer"
-            aria-label={`Abrir WhatsApp demo de ${merchant.name}`}
+            aria-label={`Contactar por WhatsApp a ${merchant.name}`}
             className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-brand-green px-3 text-sm font-extrabold text-white transition-colors hover:bg-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
           >
             <MessageCircle className="size-4" aria-hidden="true" />
-            WhatsApp demo
+            WhatsApp
           </a>
         </div>
       </div>

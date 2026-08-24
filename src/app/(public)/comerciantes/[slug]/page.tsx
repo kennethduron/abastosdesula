@@ -31,7 +31,7 @@ export async function generateMetadata({
   const merchant = await getRepositories().merchants.getBySlug(slug);
   if (!merchant) return { title: "Comerciante no encontrado" };
   return {
-    title: `${merchant.displayName} | Directorio demo`,
+    title: `${merchant.displayName} | Central de Abastos de Sula`,
     description: merchant.description,
   };
 }
@@ -56,7 +56,7 @@ export default async function MerchantProfilePage({
     merchant.categoryIds.includes(category.id),
   );
   const whatsappMessage = encodeURIComponent(
-    `Hola, vi el perfil demo de ${merchant.displayName} en la plataforma de Central de Abastos de Sula.`,
+    `Hola, vi el perfil de ${merchant.displayName} en la plataforma de Central de Abastos de Sula.`,
   );
 
   return (
@@ -85,7 +85,7 @@ export default async function MerchantProfilePage({
           <div className="mt-7 max-w-3xl">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green-light/30 bg-brand-green/18 px-3 py-1.5 text-xs font-extrabold text-brand-green-light">
               <BadgeCheck className="size-4" aria-hidden="true" />
-              Perfil demostrativo
+              Comerciante verificado
             </span>
             <h1 className="mt-4 text-4xl leading-tight font-extrabold tracking-[-0.045em] text-white sm:text-5xl lg:text-6xl">
               {merchant.displayName}
@@ -110,7 +110,7 @@ export default async function MerchantProfilePage({
               className="button-whatsapp mt-7"
             >
               <MessageCircle className="size-4" aria-hidden="true" />
-              Abrir WhatsApp demo
+              Contactar por WhatsApp
             </a>
           </div>
         </Container>
@@ -127,7 +127,7 @@ export default async function MerchantProfilePage({
             {
               icon: Clock3,
               title: "Atención",
-              value: "Horario por confirmar · Demo",
+              value: "Horario por confirmar",
             },
             {
               icon: ShieldCheck,

@@ -60,7 +60,7 @@ export default async function ProductPage({
           </div>
           <div className="self-center">
             <span className="rounded-full bg-brand-green-pale px-3 py-1 text-xs font-extrabold text-brand-green uppercase">
-              Producto demo
+              Producto disponible
             </span>
             <h1 className="mt-5 text-4xl font-black tracking-tight text-brand-navy">
               {product.name}

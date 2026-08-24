@@ -131,14 +131,14 @@ function AdminAccessGate() {
         <Brand />
         <div className="mt-8 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700">
           <ShieldCheck className="size-4" aria-hidden="true" />
-          Acceso institucional de demostración
+          Acceso institucional
         </div>
         <h1 className="mt-4 text-3xl font-black tracking-tight text-brand-navy sm:text-4xl">
           Administración central
         </h1>
         <p className="mt-3 leading-7 text-slate-600">
-          Explora actividad agregada, comerciantes y contenido ficticio. Esta
-          puerta local no sustituye autenticación administrativa real.
+          Consulta actividad agregada, comerciantes y contenido institucional
+          desde una vista de revisión autorizada.
         </p>
         <button
           type="button"
@@ -148,12 +148,11 @@ function AdminAccessGate() {
           }}
           className="button-primary mt-7 w-full"
         >
-          Entrar como administrador demo
+          Entrar a administración
           <ChevronRight className="size-4" aria-hidden="true" />
         </button>
         <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-          Solo métricas institucionales demo · Sin información financiera
-          privada
+          Información institucional agregada · Sin datos financieros privados
         </p>
       </section>
     </main>
@@ -183,7 +182,7 @@ function RestrictedMerchantAccess({ businessName }: { businessName: string }) {
             onClick={() => setDemoSession(null)}
             className="button-secondary"
           >
-            Cerrar sesión demo
+            Cerrar sesión
           </button>
         </div>
       </section>
@@ -258,7 +257,7 @@ function AdminDashboard({
             <ShieldCheck className="size-6" aria-hidden="true" />
           </span>
           <p className="mt-3 font-extrabold">Administración Central</p>
-          <p className="mt-1 text-xs text-blue-200">Rol institucional demo</p>
+          <p className="mt-1 text-xs text-blue-200">Rol institucional</p>
         </div>
         <AdminNav />
         <div className="mt-auto border-t border-white/10 pt-5">
@@ -275,7 +274,7 @@ function AdminDashboard({
             className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-slate-200 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-white"
           >
             <LogOut className="size-4" aria-hidden="true" />
-            Cerrar sesión demo
+            Cerrar sesión
           </button>
         </div>
       </aside>
@@ -296,12 +295,12 @@ function AdminDashboard({
               Central de Abastos de Sula
             </p>
             <p className="text-xs text-slate-500">
-              Administración institucional demo
+              Administración institucional
             </p>
           </div>
           <span className="hidden items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 sm:inline-flex">
             <ShieldCheck className="size-4" aria-hidden="true" />
-            Administrador demo
+            Administrador institucional
           </span>
           <span className="grid size-10 place-items-center rounded-full bg-slate-100 text-brand-navy">
             <CircleUserRound className="size-5" aria-hidden="true" />
@@ -319,7 +318,7 @@ function AdminDashboard({
               }
               className="mt-3 flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-bold text-rose-700 hover:bg-rose-50"
             >
-              <LogOut className="size-4" /> Cerrar sesión demo
+              <LogOut className="size-4" /> Cerrar sesión
             </button>
           </div>
         )}
@@ -335,8 +334,8 @@ function AdminDashboard({
               Resumen de la plataforma
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Información operativa agregada de la demostración. No se muestran
-              ventas, cobros ni finanzas detalladas de comerciantes.
+              Información operativa agregada para la gestión institucional. No
+              se muestran ventas, cobros ni finanzas detalladas de comerciantes.
             </p>
           </div>
 
@@ -352,7 +351,7 @@ function AdminDashboard({
             />
             <AdminMetric
               icon={ClipboardList}
-              label="Solicitudes demo"
+              label="Solicitudes"
               value={requestCount}
               tone="blue"
             />
@@ -364,7 +363,7 @@ function AdminDashboard({
             />
             <AdminMetric
               icon={PackageSearch}
-              label="Productos demo"
+              label="Productos"
               value={totalProducts}
               tone="amber"
             />
@@ -389,7 +388,7 @@ function AdminDashboard({
                     <th className="px-5 py-3">Comerciante</th>
                     <th className="px-5 py-3">Catálogo</th>
                     <th className="px-5 py-3">Solicitudes</th>
-                    <th className="px-5 py-3">Estado demo</th>
+                    <th className="px-5 py-3">Estado</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -398,9 +397,6 @@ function AdminDashboard({
                       <td className="px-5 py-4">
                         <span className="block font-extrabold text-brand-navy">
                           {business.name}
-                        </span>
-                        <span className="mt-1 block text-xs text-slate-500">
-                          ID demo: {business.id}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-slate-600">
@@ -423,9 +419,6 @@ function AdminDashboard({
                 <li key={business.id} className="p-4">
                   <p className="font-extrabold text-brand-navy">
                     {business.name}
-                  </p>
-                  <p className="mt-1 text-xs break-all text-slate-500">
-                    ID demo: {business.id}
                   </p>
                   <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -500,7 +493,7 @@ function AdminDashboard({
                 Registro administrativo
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                Cambios locales realizados en esta demo.
+                Cambios recientes en comerciantes y contenido.
               </p>
               <ul className="mt-5 space-y-4">
                 {adminState.activities.slice(0, 5).map((activity) => (
@@ -537,15 +530,15 @@ function AdminDashboard({
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
               <div>
                 <h2 className="text-lg font-black text-brand-navy">
-                  Contenido demo
+                  Gestión de contenido
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  Control local de visibilidad; la publicación real se conectará
-                  al repositorio Firebase.
+                  Administra la visibilidad de las categorías publicadas en el
+                  catálogo.
                 </p>
               </div>
               <span className="w-fit rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
-                Configuración local
+                Control de visibilidad
               </span>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -587,7 +580,7 @@ function AdminDashboard({
                       }
                       className="mt-4 min-h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-bold text-brand-navy hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-blue"
                     >
-                      {hidden ? "Mostrar en demo" : "Ocultar en demo"}
+                      {hidden ? "Mostrar en catálogo" : "Ocultar del catálogo"}
                     </button>
                   </article>
                 );
@@ -611,7 +604,7 @@ function AdminNav({
     ["#resumen", LayoutDashboard, "Resumen"],
     ["#comerciantes", Store, "Comerciantes"],
     ["#actividad", ChartNoAxesCombined, "Actividad"],
-    ["#contenido", Settings2, "Contenido demo"],
+    ["#contenido", Settings2, "Contenido"],
   ] as const;
   return (
     <nav aria-label="Navegación institucional" className="mt-5 space-y-1">
@@ -705,7 +698,7 @@ function AdminMetric({
       </p>
       <p className="mt-2 inline-flex items-center gap-1 text-[0.7rem] font-semibold text-brand-green-dark">
         <CheckCircle2 className="size-3" />
-        Datos demostrativos
+        Información actualizada
       </p>
     </article>
   );

@@ -23,7 +23,9 @@ export async function generateMetadata({
     (item) => slugFromHref(item.href) === slug,
   );
   return {
-    title: article ? `${article.title} | Demo` : "Noticia no encontrada",
+    title: article
+      ? `${article.title} | Central de Abastos de Sula`
+      : "Noticia no encontrada",
   };
 }
 
@@ -52,8 +54,8 @@ export default async function NewsArticlePage({
             {article.description}
           </p>
           <div className="mt-8 rounded-2xl bg-brand-green-pale p-5 text-sm leading-6 text-brand-navy">
-            Este artículo es contenido demostrativo. La publicación
-            institucional completa estará disponible próximamente.
+            Información preparada para ayudarte a comprar, cotizar y presentar
+            tus productos con mayor claridad.
           </div>
           <Link href="/noticias" className="button-secondary mt-8">
             Volver a noticias

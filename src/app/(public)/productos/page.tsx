@@ -11,8 +11,8 @@ import {
 } from "@/data/adapters/mock/demo-data";
 
 export const metadata: Metadata = {
-  title: "Productos demo | Central de Abastos de Sula",
-  description: "Catálogo demostrativo de productos y comerciantes.",
+  title: "Productos | Central de Abastos de Sula",
+  description: "Explora productos, comerciantes y precios de referencia.",
 };
 
 export default async function ProductsPage({
@@ -42,7 +42,7 @@ export default async function ProductsPage({
     <main id="contenido-principal" className="bg-slate-50 py-12 sm:py-16">
       <Container>
         <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-          Catálogo demostrativo
+          Catálogo comercial
         </p>
         <h1 className="mt-3 text-4xl font-black tracking-tight text-brand-navy sm:text-5xl">
           Productos disponibles
@@ -92,7 +92,7 @@ export default async function ProductsPage({
                     </div>
                     <div className="p-5">
                       <span className="text-xs font-bold text-brand-green uppercase">
-                        Precio demo
+                        Precio de referencia
                       </span>
                       <h2 className="mt-2 text-lg font-extrabold text-brand-navy">
                         {product.name}
@@ -113,7 +113,7 @@ export default async function ProductsPage({
           </div>
         ) : (
           <p className="mt-9 rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">
-            No encontramos productos demo con esos filtros.
+            No encontramos productos con esos filtros.
           </p>
         )}
       </Container>

@@ -86,7 +86,7 @@ export function ensureDemoQuoteSeed() {
       customerType: "business",
       phone: "9999-0000",
       fulfillment: "coordinate",
-      notes: "Solicitud de ejemplo para demostrar el flujo del CRM.",
+      notes: "Solicitud de referencia para revisar el flujo de atención.",
       items: [
         {
           productId: "product-tomato",
@@ -185,7 +185,7 @@ export function saveDemoQuoteRequest({
         id: `activity-demo-${crypto.randomUUID()}`,
         businessId: request.businessId,
         type: "quote_request_created",
-        description: `Nueva solicitud demo de ${request.customerName}`,
+        description: `Nueva solicitud de ${request.customerName}`,
         entityType: "quote_request",
         entityId: request.id,
         createdAt: timestamp,

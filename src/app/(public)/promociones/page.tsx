@@ -13,7 +13,7 @@ export default function PromotionsPage() {
       <Container>
         <section className="mx-auto max-w-2xl rounded-3xl border border-border bg-white p-8 text-center shadow-sm sm:p-12">
           <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-            Módulo demo · Próximamente
+            Próximamente
           </p>
           <h1 className="mt-4 text-4xl font-black text-brand-navy">
             Promociones

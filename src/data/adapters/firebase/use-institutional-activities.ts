@@ -49,7 +49,7 @@ export function useFirebaseInstitutionalActivities(enabled: boolean) {
       .then(() => {
         if (!active) return;
         if (!auth.currentUser) {
-          setError("La sesión de Firebase no está disponible.");
+          setError("Tu sesión no está disponible. Inicia sesión nuevamente.");
           return;
         }
         unsubscribe = onSnapshot(
@@ -67,7 +67,9 @@ export function useFirebaseInstitutionalActivities(enabled: boolean) {
             setError("No fue posible sincronizar la actividad institucional."),
         );
       })
-      .catch(() => setError("No fue posible restaurar la sesión de Firebase."));
+      .catch(() =>
+        setError("No fue posible restablecer la sesión. Intenta nuevamente."),
+      );
     return () => {
       active = false;
       unsubscribe?.();
