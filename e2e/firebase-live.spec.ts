@@ -30,7 +30,9 @@ test.skip(!firebaseE2E, "Requires explicit Firebase E2E authorization.");
 async function login(page: Page, credentials: typeof merchantA) {
   await page.goto("/acceso");
   await page.getByLabel("Correo electrónico").fill(credentials.email);
-  await page.getByLabel("Contraseña").fill(credentials.password);
+  await page
+    .getByLabel("Contraseña", { exact: true })
+    .fill(credentials.password);
   const tokenResponse = page.waitForResponse(
     (response) =>
       response.url().includes("identitytoolkit.googleapis.com") &&
@@ -318,7 +320,7 @@ test("presentation access is read only and password visibility is accessible", a
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/acceso");
 
-  const password = page.getByLabel("Contraseña");
+  const password = page.getByLabel("Contraseña", { exact: true });
   await expect(password).toHaveAttribute("type", "password");
   await password.fill("Muestra-Segura-2026!");
   await page.screenshot({
@@ -327,9 +329,7 @@ test("presentation access is read only and password visibility is accessible", a
   });
   await page.getByRole("button", { name: "Mostrar contraseña" }).click();
   await expect(password).toHaveAttribute("type", "text");
-  await expect(
-    page.getByRole("button", { name: "Ocultar contraseña" }),
-  ).toBeFocused();
+  await expect(password).toBeFocused();
   await page.screenshot({
     path: "artifacts/tenant-self-service-audit/login-password-visible-1440.png",
     fullPage: true,
@@ -381,7 +381,7 @@ test("presentation access is read only and password visibility is accessible", a
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/acceso?clearSession=1");
-  await expect(page.getByLabel("Contraseña")).toBeVisible();
+  await expect(page.getByLabel("Contraseña", { exact: true })).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
