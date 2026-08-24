@@ -1,7 +1,16 @@
 import type { DemoEntity, EntityId } from "@/domain/shared";
 
-export type UserRole =
-  "merchant" | "institutional_admin" | "presentation_viewer";
+export const USER_ROLES = [
+  "merchant",
+  "institutional_admin",
+  "presentation_viewer",
+] as const;
+
+export type UserRole = (typeof USER_ROLES)[number];
+
+export function isUserRole(value: unknown): value is UserRole {
+  return USER_ROLES.some((role) => role === value);
+}
 
 export interface User extends DemoEntity {
   email: string;

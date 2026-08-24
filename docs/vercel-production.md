@@ -23,6 +23,11 @@ variables Firebase Admin documentadas en `firebase-demo-setup.md`. El seed y el
 E2E autenticado usan además siete variables `DEMO_*`. Todas deben tener valor,
 estar asignadas a Production y cargarse antes de crear el deployment.
 
+La etapa comercial puede habilitar `PRESENTATION_AUTO_ACCESS=true` únicamente
+como variable privada de Production. Su política de aprovisionamiento y el
+procedimiento de desactivación están documentados en
+[`presentation-auto-access.md`](presentation-auto-access.md).
+
 No pegues secretos en argumentos de comandos, commits, tickets o logs. Las
 variables sensibles de Vercel no siempre pueden descargarse; valida su formato
 dentro de un runtime protegido y reporta solo estados.

@@ -46,6 +46,10 @@ beforeEach(async () => {
         role: "presentation_viewer",
         active: true,
       }),
+      setDoc(doc(db, "users", "mismatched-viewer"), {
+        role: "merchant",
+        active: true,
+      }),
       setDoc(doc(db, "quoteRequests", "quote-a"), {
         businessId: "business-a",
         customerId: "customer-a",
@@ -331,6 +335,24 @@ describe("Firestore multitenant rules", () => {
     );
     await assertFails(getDoc(doc(presentation, "quoteRequests", "quote-a")));
     await assertFails(getDoc(doc(presentation, "customers", "customer-a")));
+  });
+
+  it("requires an active profile whose role matches the verified claim", async () => {
+    const missingProfile = institutional(
+      "unprovisioned-viewer",
+      "presentation_viewer",
+    );
+    const mismatchedProfile = institutional(
+      "mismatched-viewer",
+      "presentation_viewer",
+    );
+
+    await assertFails(
+      getDoc(doc(missingProfile, "tenantAccounts", "business-a")),
+    );
+    await assertFails(
+      getDoc(doc(mismatchedProfile, "tenantAccounts", "business-a")),
+    );
   });
 
   it("keeps presentation and administrative billing access read only", async () => {

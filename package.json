@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "firebase:seed": "node scripts/seed-firebase-demo.mjs",
-    "firebase:provision-tenant-service": "node --env-file=.env.presentation.local scripts/provision-tenant-self-service.mjs"
+    "firebase:provision-tenant-service": "node --env-file=.env.presentation.local scripts/provision-tenant-self-service.mjs",
+    "firebase:auto-access-fixture": "node --env-file=.env.demo.local --env-file=.env.auto-access.local scripts/manage-presentation-auto-access-fixture.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

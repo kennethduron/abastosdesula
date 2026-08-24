@@ -2,7 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import type { UserRole } from "@/domain";
+import { isUserRole, type UserRole } from "@/domain";
 
 import { isFirebaseAdminConfigured } from "./admin-config";
 
@@ -44,11 +44,7 @@ export async function getAppSessionState(): Promise<AppSessionState> {
       true,
     );
     const role = decoded.role;
-    if (
-      role !== "merchant" &&
-      role !== "institutional_admin" &&
-      role !== "presentation_viewer"
-    ) {
+    if (!isUserRole(role)) {
       return { status: "invalid" };
     }
     const userRecord = await getFirebaseAdminDb()

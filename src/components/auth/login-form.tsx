@@ -76,16 +76,30 @@ export function LoginForm({
             String(data.get("email")),
             String(data.get("password")),
           );
-          const idToken = await credential.user.getIdToken();
-          const response = await fetch("/api/auth/session", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ idToken }),
-          });
-          const result = (await response.json()) as {
-            role?: string;
-            error?: string;
+          const createSession = async (idToken: string) => {
+            const response = await fetch("/api/auth/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ idToken }),
+            });
+            const result = (await response.json()) as {
+              role?: string;
+              error?: string;
+              refreshRequired?: boolean;
+            };
+            return { response, result };
           };
+
+          let session = await createSession(await credential.user.getIdToken());
+          if (
+            session.response.status === 409 &&
+            session.result.refreshRequired === true
+          ) {
+            session = await createSession(
+              await credential.user.getIdToken(true),
+            );
+          }
+          const { response, result } = session;
           if (!response.ok)
             throw new Error(result.error ?? "Acceso rechazado.");
           router.replace(result.role === "merchant" ? "/panel" : "/admin");

@@ -7,6 +7,7 @@ import {
   FIREBASE_SESSION_MAX_AGE_SECONDS,
   getAppSessionState,
 } from "@/data/adapters/firebase/session";
+import { isUserRole } from "@/domain";
 import { getSanitizedServerError } from "@/server/safe-server-error";
 import { hasTrustedSameOrigin } from "@/server/security/same-origin";
 
@@ -61,11 +62,20 @@ export async function POST(request: Request) {
       );
     }
     const role = decoded.role;
-    if (
-      role !== "merchant" &&
-      role !== "institutional_admin" &&
-      role !== "presentation_viewer"
-    ) {
+    if (!isUserRole(role)) {
+      firebaseStage = "get-firestore";
+      const db = getFirebaseAdminDb();
+      firebaseStage = "presentation-auto-access";
+      const { resolvePresentationAutoAccess } =
+        await import("@/server/auth/presentation-auto-access");
+      const autoAccess = await resolvePresentationAutoAccess({
+        auth,
+        db,
+        decoded,
+      });
+      if (autoAccess.status === "refresh-required") {
+        return Response.json({ refreshRequired: true }, { status: 409 });
+      }
       return Response.json({ error: "Rol no autorizado." }, { status: 403 });
     }
     if (role === "merchant" && typeof decoded.businessId !== "string") {

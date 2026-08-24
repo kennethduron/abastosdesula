@@ -23,6 +23,8 @@ cache en [`docs/pwa.md`](docs/pwa.md).
 
 La preparación y las variables de Vercel están documentadas en
 [`docs/vercel-production.md`](docs/vercel-production.md).
+La política temporal de acceso institucional de solo lectura está documentada
+en [`docs/presentation-auto-access.md`](docs/presentation-auto-access.md).
 
 ## Validaciones
 

@@ -22,6 +22,10 @@ const presentation = {
   email: process.env.PRESENTATION_EMAIL ?? "",
   password: process.env.PRESENTATION_PASSWORD ?? "",
 };
+const autoAccessFixture = {
+  email: process.env.AUTO_ACCESS_FIXTURE_EMAIL ?? "",
+  password: process.env.AUTO_ACCESS_FIXTURE_PASSWORD ?? "",
+};
 const firestoreBase =
   "https://firestore.googleapis.com/v1/projects/abastosdesula-demo/databases/(default)/documents";
 
@@ -389,6 +393,114 @@ test("presentation access is read only and password visibility is accessible", a
     path: "artifacts/tenant-self-service-audit/login-390.png",
     fullPage: true,
   });
+});
+
+test("a new identity receives institutional read-only access", async ({
+  page,
+  request,
+}) => {
+  test.skip(
+    !autoAccessFixture.email || !autoAccessFixture.password,
+    "Requires the controlled no-role account.",
+  );
+  await request.delete("/api/auth/session");
+  await page.goto("/acceso");
+  await page.getByLabel("Correo electrónico").fill(autoAccessFixture.email);
+  await page
+    .getByLabel("Contraseña", { exact: true })
+    .fill(autoAccessFixture.password);
+
+  const provisioningResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/auth/session") &&
+      response.request().method() === "POST" &&
+      response.status() === 409,
+  );
+  const successfulSessionResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/auth/session") &&
+      response.request().method() === "POST" &&
+      response.status() === 200,
+  );
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  const provisioned = await provisioningResponse;
+  expect(await provisioned.json()).toEqual({ refreshRequired: true });
+  const successfulSession = await successfulSessionResponse;
+  const requestPayload = successfulSession.request().postDataJSON() as {
+    idToken?: string;
+  };
+  expect(requestPayload.idToken).toBeTruthy();
+
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(
+    page.getByRole("heading", { name: "Resumen de la plataforma" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("admin-tenants")).toBeVisible();
+  await expect(page.locator("#comerciantes select").first()).toBeDisabled();
+
+  const session = await request.get("/api/auth/session");
+  expect(session.status()).toBe(200);
+  expect(await session.json()).toEqual({
+    authenticated: true,
+    role: "presentation_viewer",
+  });
+
+  const token = requestPayload.idToken as string;
+  const tokenClaims = JSON.parse(
+    Buffer.from(token.split(".")[1], "base64url").toString("utf8"),
+  ) as { role?: string; sub?: string };
+  expect(tokenClaims.role).toBe("presentation_viewer");
+  expect(tokenClaims.sub).toBeTruthy();
+  const synchronizedProfile = await request.get(
+    `${firestoreBase}/users/${tokenClaims.sub}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(synchronizedProfile.status()).toBe(200);
+  const synchronizedProfileDocument = (await synchronizedProfile.json()) as {
+    fields?: {
+      active?: { booleanValue?: boolean };
+      role?: { stringValue?: string };
+      uid?: { stringValue?: string };
+    };
+  };
+  expect(synchronizedProfileDocument.fields?.active?.booleanValue).toBe(true);
+  expect(synchronizedProfileDocument.fields?.role?.stringValue).toBe(
+    "presentation_viewer",
+  );
+  expect(synchronizedProfileDocument.fields?.uid?.stringValue).toBe(
+    tokenClaims.sub,
+  );
+
+  const allowedInstitutionalRead = await request.get(
+    `${firestoreBase}/tenantAccounts/business-frutas-valle`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(allowedInstitutionalRead.status()).toBe(200);
+
+  const deniedInstitutionalWrite = await request.patch(
+    `${firestoreBase}/tenantAccounts/business-frutas-valle?updateMask.fieldPaths=accountStatus`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { fields: { accountStatus: { stringValue: "overdue" } } },
+    },
+  );
+  expect(deniedInstitutionalWrite.status()).toBe(403);
+
+  const deniedMerchantAQuote = await request.get(
+    `${firestoreBase}/quoteRequests/seed-quote-frutas-001`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(deniedMerchantAQuote.status()).toBe(403);
+  const deniedMerchantACustomer = await request.get(
+    `${firestoreBase}/customers/seed-customer-frutas-001`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(deniedMerchantACustomer.status()).toBe(403);
+  const deniedAllPrivateCrm = await request.post(`${firestoreBase}:runQuery`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { structuredQuery: { from: [{ collectionId: "quoteRequests" }] } },
+  });
+  expect(deniedAllPrivateCrm.status()).toBe(403);
 });
 
 test("merchant billing access is isolated by business", async ({
