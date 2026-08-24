@@ -251,7 +251,13 @@ export function useFirebaseQuoteRequests(businessId: string, enabled: boolean) {
       updatedAt: serverTimestamp(),
       followUps: [
         ...array(data.followUps),
-        { id: crypto.randomUUID(), ...input, status: "pending" },
+        {
+          id: crypto.randomUUID(),
+          title: input.title,
+          dueAt: input.dueAt,
+          ...(input.note ? { note: input.note } : {}),
+          status: "pending",
+        },
       ],
       activity: [
         ...array(data.activity),
@@ -300,8 +306,9 @@ export function useFirebaseQuoteRequests(businessId: string, enabled: boolean) {
         0,
       );
       const quotation: QuoteCommercialProposal = {
-        ...input,
         lines,
+        discountMinor: input.discountMinor,
+        ...(input.note ? { note: input.note } : {}),
         totalMinor: Math.max(0, subtotal - input.discountMinor),
         updatedAt: new Date().toISOString(),
         version:

@@ -136,6 +136,11 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
   const auditSuffix = Date.now();
   const customerNameA = `Cliente Auditoría A ${auditSuffix}`;
   const customerNameB = `Cliente Auditoría B ${auditSuffix}`;
+  const internalNote = `Nota privada de auditoría ${auditSuffix}`;
+  const followUpTitle = `Confirmar solicitud ${auditSuffix}`;
+  const followUpDate = new Date(Date.now() + 86_400_000)
+    .toISOString()
+    .slice(0, 10);
   await submitQuote(page, "comercial-frutas-del-valle", customerNameA);
   await submitQuote(page, "verduras-la-huerta", customerNameB);
 
@@ -155,20 +160,28 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
     .filter({ hasText: customerNameA })
     .first()
     .click();
+  const detail = page.getByRole("dialog", { name: "Detalle de solicitud" });
+  await detail.getByLabel("Nueva nota interna").fill(internalNote);
+  await detail.getByRole("button", { name: "Agregar nota" }).click();
+  await expect(detail.getByText(internalNote)).toBeVisible();
+  await detail.getByLabel("Título").fill(followUpTitle);
+  await detail.getByLabel("Fecha").fill(followUpDate);
+  await detail.getByLabel("Hora (opcional)").fill("10:30");
+  await detail.getByRole("button", { name: "Programar seguimiento" }).click();
+  await expect(detail.getByText(followUpTitle)).toBeVisible();
   const status = page.getByLabel("Estado de la solicitud");
   await status.selectOption("in_review");
   await expectQuoteStatus(request, merchantAToken, quoteA.id, "in_review");
-  await page.reload();
-  await expect(page.getByText(customerNameA).first()).toBeVisible();
-  await page
-    .getByRole("button")
-    .filter({ hasText: customerNameA })
+  await detail.getByRole("tab", { name: "Cotización" }).click();
+  await detail
+    .getByLabel(/^Precio de /)
     .first()
-    .click();
-  await expect(page.getByLabel("Estado de la solicitud")).toHaveValue(
-    "in_review",
-  );
-  await page.getByLabel("Estado de la solicitud").selectOption("quoted");
+    .fill("12.50");
+  await detail.getByLabel("Descuento de la cotización").fill("2.00");
+  await detail.getByRole("button", { name: "Guardar cotización" }).click();
+  await expect(detail.getByText(/Versión 1/)).toBeVisible();
+  await detail.getByRole("tab", { name: "Solicitud" }).click();
+  await status.selectOption("quoted");
   await expectQuoteStatus(request, merchantAToken, quoteA.id, "quoted");
   await page.reload();
   await expect(page.getByText(customerNameA).first()).toBeVisible();
@@ -178,6 +191,24 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
     .first()
     .click();
   await expect(page.getByLabel("Estado de la solicitud")).toHaveValue("quoted");
+  await expect(page.getByText(internalNote)).toBeVisible();
+  await expect(page.getByText(followUpTitle)).toBeVisible();
+  await page.getByRole("tab", { name: "Cotización" }).click();
+  await expect(page.getByText(/Versión 1/)).toBeVisible();
+  await page.getByRole("button", { name: "Cerrar detalle" }).click();
+  await page.getByRole("button", { name: "Clientes" }).first().click();
+  await page
+    .getByRole("button")
+    .filter({ hasText: customerNameA })
+    .first()
+    .click();
+  const customerDetail = page.getByRole("dialog", { name: customerNameA });
+  await expect(
+    customerDetail.getByText("Historial de solicitudes"),
+  ).toBeVisible();
+  await customerDetail
+    .getByRole("button", { name: "Cerrar detalle del cliente" })
+    .click();
 
   const privateProductId = `product-private-audit-${auditSuffix}`;
   const privateProduct = await request.post(
