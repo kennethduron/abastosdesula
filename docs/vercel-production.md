@@ -1,84 +1,76 @@
-# Preparación de producción en Vercel
+# Producción en Vercel
 
-## Estado actual
+## Proyecto activo
 
-- Cuenta CLI autenticada: `kennethduronpaz-7247`.
-- Team detectado: `kennethduronpaz-7247s-projects`.
-- Proyecto `abastosdesula`: todavía no existe.
-- `https://abastosdesula.vercel.app`: responde `DEPLOYMENT_NOT_FOUND`.
-- Runtime fijado a Node.js `22.x` en `package.json` para coincidir con desarrollo
-  y evitar adoptar silenciosamente el default `24.x` de un proyecto nuevo.
+- Team/scope: `ken-code` (`Ken Code`).
+- Proyecto: `abastosdesula`.
+- Dominio: `https://abastosdesula.vercel.app`.
+- Rama de producción: `main`.
+- Runtime: Node.js `22.x`.
 
-No se debe crear ni desplegar el proyecto final hasta disponer del proyecto
-Firebase y sus variables seguras.
-
-## Variables requeridas
-
-### Públicas, incluidas en el bundle
-
-```text
-NEXT_PUBLIC_FIREBASE_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-NEXT_PUBLIC_FIREBASE_PROJECT_ID
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-NEXT_PUBLIC_FIREBASE_APP_ID
-```
-
-`NEXT_PUBLIC_USE_FIREBASE_EMULATORS` debe omitirse o ser `false` en Vercel.
-
-### Secretos exclusivos del servidor
-
-```text
-FIREBASE_PROJECT_ID
-FIREBASE_CLIENT_EMAIL
-FIREBASE_PRIVATE_KEY
-```
-
-Nunca configures claves Admin con prefijo `NEXT_PUBLIC_`. Las contraseñas de las
-cuentas demo no son variables necesarias para ejecutar la aplicación en Vercel;
-se utilizan únicamente al ejecutar el seed desde un entorno autorizado.
-
-## Preparación de Firebase previa
-
-1. Crear el proyecto Firebase dedicado.
-2. Habilitar Email/Password y Firestore.
-3. Desplegar Rules e índices desde una sesión Firebase CLI autorizada.
-4. Ejecutar el seed controlado fuera de Vercel.
-5. Añadir `abastosdesula.vercel.app` a dominios autorizados de Firebase Auth.
-6. Verificar Merchant A, Merchant B y administrador antes del deploy público.
-
-## Creación y deploy
-
-Ejecutar únicamente cuando las variables anteriores estén disponibles:
+Vinculación local segura:
 
 ```bash
-vercel link --yes --project abastosdesula
-vercel env add <VARIABLE> production
-vercel env add <VARIABLE> preview
-vercel deploy --prod
+vercel link --yes --project abastosdesula --scope ken-code
 ```
 
-No pegues secretos en comandos que queden en historial. Usa la entrada segura de
-la CLI o el dashboard. Preview debería usar un proyecto Firebase separado; si no
-existe, limita inicialmente las variables a Production.
+`.vercel/` y los archivos `.env*` permanecen ignorados por Git.
+
+## Variables de Production
+
+La aplicación requiere las seis variables `NEXT_PUBLIC_FIREBASE_*` y las tres
+variables Firebase Admin documentadas en `firebase-demo-setup.md`. El seed y el
+E2E autenticado usan además siete variables `DEMO_*`. Todas deben tener valor,
+estar asignadas a Production y cargarse antes de crear el deployment.
+
+No pegues secretos en argumentos de comandos, commits, tickets o logs. Las
+variables sensibles de Vercel no siempre pueden descargarse; valida su formato
+dentro de un runtime protegido y reporta solo estados.
+
+## Incidente Firebase Admin resuelto
+
+El 503 no era causado por la service account. `firebase-admin/auth` cargaba
+`jwks-rsa@4.1.0`, cuyo CommonJS hacía `require()` de `jose@6` ESM dentro del
+loader serverless de Turbopack. El import fallaba antes de inicializar
+credenciales.
+
+`pnpm-workspace.yaml` fija únicamente la dependencia transitiva incompatible:
+
+```yaml
+overrides:
+  "jwks-rsa>jose": 4.15.9
+```
+
+Las rutas que usan `firebase-admin` declaran runtime Node.js. El endpoint de
+sesión registra diagnósticos sanitizados por etapa y nunca incluye claves,
+tokens, cookies o emails completos.
+
+## Deploy
+
+Después de QA y push de `main`:
+
+```bash
+vercel deploy --prod --scope ken-code
+vercel inspect <deployment> --scope ken-code
+```
+
+Confirma que el deployment esté `READY`, use el commit esperado y que el alias
+apunte al nuevo deployment. `READY` no sustituye la prueba de la URL real.
 
 ## Auditoría posterior
 
-```bash
-PLAYWRIGHT_BASE_URL=https://abastosdesula.vercel.app pnpm test:e2e
-```
+- GET público: `/`, directorios, perfiles, productos, promociones, noticias y
+  contacto deben responder 200.
+- Anónimo: `/panel` y `/admin` deben redirigir 307 a `/acceso`.
+- `/api/auth/session` sin cookie debe responder 401.
+- Un token sintético inválido debe responder 401, nunca 500/503.
+- Merchant y admin deben entrar solo al panel correspondiente.
+- Ejecutar el E2E Firebase real y la suite pública contra el dominio final.
+- Revisar logs Vercel por 5xx, errores no controlados y datos sensibles.
+- Verificar manifest, service worker, offline fallback y ausencia de rutas
+  privadas en cache.
+- Confirmar cero overflow en 375×812, 390×844, 430×932, 768×1024, 1024×768,
+  1280×800, 1440×900 y 1920×1080.
 
-Además de Playwright, verificar:
-
-- status/headers de `/`, `/manifest.webmanifest`, `/sw.js` y los cuatro iconos;
-- instalación PWA en Chrome/Edge y “Agregar a pantalla de inicio” en iOS;
-- login/logout y redirecciones por rol;
-- solicitud pública, persistencia y cambio de estado tras refresh;
-- aislamiento Merchant A/B y privacidad del administrador institucional;
-- logs Vercel sin secretos, errores, hydration mismatch o imágenes fallidas;
-- cero overflow en los ocho viewports definidos;
-- cache PWA sin `/api`, `/panel`, `/admin` o `/acceso`.
-
-Si el deploy falla, no cambies producción a mano. Corrige en una rama, repite QA
-y despliega un nuevo build; Vercel conserva el deployment anterior para rollback.
+Los screenshots finales se guardan en `artifacts/final-production-audit/`, una
+ruta ignorada por Git.

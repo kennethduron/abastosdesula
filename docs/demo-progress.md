@@ -1,132 +1,57 @@
 # Progreso de la demo
 
-## Fase actual
+## Estado de producción
 
-Preparación Vercel en curso; deploy bloqueado por credenciales Firebase ausentes.
+La demo está operativa en `https://abastosdesula.vercel.app` sobre el proyecto
+Vercel `ken-code/abastosdesula` y Firebase `abastosdesula-demo`.
 
-## Fases terminadas
+- Firebase Admin funciona en Node.js serverless.
+- Firebase Authentication usa Email/Password y sesiones HttpOnly verificadas.
+- Firestore `(default)` está en modo Native, con reglas e índices desplegados.
+- El seed remoto se ejecutó de forma controlada y no destructiva.
+- `/panel` y `/admin` redirigen a `/acceso` sin sesión; no devuelven 5xx.
+- La PWA excluye del cache las rutas privadas, autenticación y API.
 
-### Home pública
+## Datos y usuarios demo
 
-- Rama: `feat/public-home`
-- Commits principales:
-  - `0bfa655 feat: build responsive public home`
-  - `dd6aee7 feat: add premium motion and hero carousel`
-  - `fc62c2e feat: move hero carousel to background`
-- Integrada por fast-forward a `main`.
-- QA: format, lint, typecheck, test, build y Playwright 15/15.
+El entorno contiene seis comercios, cinco categorías, seis perfiles públicos,
+doce productos públicos, fixtures privados y datos de auditoría marcados con
+`isDemo`. Existen tres usuarios Firebase Auth, sin credenciales en Git:
 
-### Arquitectura de datos
+- Merchant A: `role=merchant`, `businessId=business-frutas-valle`, `active=true`.
+- Merchant B: `role=merchant`, `businessId=business-la-huerta`, `active=true`.
+- Admin institucional: `role=institutional_admin`, `active=true`.
 
-- Rama: `feat/data-architecture`
-- Commit: `fadb796 feat: add vendor-neutral data architecture`
-- Modelos de dominio, contratos de repositorio y adaptador mock implementados.
-- Regla de carrito monocomerciante y validación pública estricta incluidas.
-- Integrada por fast-forward a `main`.
+Las credenciales se conservan únicamente en variables sensibles de Vercel y en
+un archivo local ignorado por Git. Este documento nunca incluye contraseñas.
 
-### Directorio de comerciantes
+## Flujo validado
 
-- Rama: `feat/merchant-directory`
-- Ruta `/comerciantes` con búsqueda, categorías, disponibilidad y orden funcionales.
-- Seis perfiles ficticios marcados como demo.
-- Rutas de perfil prerenderizadas para evitar enlaces rotos.
-- Matriz responsive y pruebas Playwright incluidas.
+1. Un comprador abre el directorio, un perfil y agrega un producto al carrito.
+2. Envía datos ficticios y la API crea cliente, solicitud, actividad y
+   notificación en Firestore.
+3. Merchant A inicia sesión, ve solo su negocio y su CRM.
+4. Cambia una solicitud de Nueva a En revisión y después a Cotizada.
+5. El estado persiste después de recargar.
+6. Merchant B no puede leer la solicitud, cliente o producto privado de A, ni
+   cambiar de tenant manipulando la URL.
+7. Merchant A tampoco puede leer solicitudes de B.
+8. El admin ve únicamente resumen institucional y actividad permitida; no ve
+   solicitudes o clientes privados completos.
 
-### Perfil, catálogo y carrito
+## Límites del demo
 
-- Rama: `feat/merchant-profile-cart`
-- Perfiles prerenderizados con identidad, categorías e información demo.
-- Catálogo con búsqueda, filtros, cantidades y precios ficticios de referencia.
-- Carrito persistente mediante `localStorage` y sincronizado como store externo.
-- Regla monocomerciante con conflicto explícito y opción segura para reemplazar.
-- Drawer responsive y consulta opcional por WhatsApp demo.
+- Los productos, precios, teléfonos y solicitudes son ficticios.
+- No se envían mensajes, pagos ni operaciones comerciales reales.
+- El rate limit de solicitudes públicas es local a cada instancia serverless;
+  debe sustituirse por un almacén distribuido antes de uso contractual.
+- Firebase es el backend temporal de esta demostración.
 
-### Solicitud de cotización
+## Migración futura
 
-- Rama: `feat/quote-request-flow`
-- Formulario validado con React Hook Form, Zod estricto y mensajes accesibles.
-- Tipos de cliente, teléfono, WhatsApp opcional, modalidad y observaciones.
-- Solicitud, historial inicial y actividad persistidos localmente para el CRM demo.
-- Confirmación explícita sin envío de mensajes ni escrituras a servicios reales.
-
-### Dashboard y CRM
-
-- Rama: `feat/merchant-dashboard-crm`.
-- Ruta estática `/panel` con puerta de acceso local explícitamente demo.
-- Resumen, métricas, solicitudes, filtros, detalle, clientes e historial.
-- Cambios de estado persistentes y aislamiento doble por `businessId`.
-- Navegación responsive para teléfono, tablet y escritorio.
-- QA: format, lint, typecheck, test, build y Playwright 48/48.
-
-### Administración institucional
-
-- Rama: `feat/institutional-admin`.
-- Ruta `/admin` separada del CRM de comerciantes.
-- Métricas agregadas, estados de comerciantes, actividad y contenido demo.
-- Bloqueo explícito para sesiones merchant y acceso local diferenciado por rol.
-- Sin nombres de clientes ni finanzas privadas detalladas en la vista central.
-- Gestión local persistente de estado de negocios y visibilidad de categorías.
-- Responsive: fichas móviles y tabla operativa desde tablet.
-- QA dedicado: 5/5 escenarios Playwright, consola limpia y cero overflow.
-
-### Backend Firebase demo
-
-- Rama: `feat/firebase-demo-backend`.
-- Firebase Authentication para merchant e institutional admin mediante sesión
-  HttpOnly verificada en servidor.
-- Endpoint público estricto con Zod, límite básico de abuso y escritura Admin
-  atómica de cliente, solicitud, actividad y notificación.
-- Suscripción Firestore del CRM limitada al `businessId` del claim.
-- Panel institucional conectado solo a actividades agregadas seguras.
-- Rules multitenant con pruebas en emulador para acceso anónimo, acceso cruzado,
-  reasignación de tenant, manipulación del payload y privacidad institucional.
-- Seed confirmado, idempotente y no destructivo para seis comercios y datos demo.
-- QA: format, lint, typecheck, build, 10/10 unitarias, 6/6 Rules, 55/55
-  Playwright estándar y 1/1 E2E Firebase con Auth/Firestore emulados.
-- Bundle dividido: la Home no carga Firebase, `/acceso` carga solo Auth y
-  Firestore queda limitado a los paneles privados.
-
-### PWA instalable
-
-- Rama: `feat/pwa`.
-- Manifest nativo de Next.js, metadata Apple y theme color.
-- Iconos 192, 512, maskable y Apple creados desde el símbolo visual del proyecto.
-- Service worker sin dependencias con cache exclusivamente público y versionado.
-- `/api`, autenticación, CRM y administración excluidos explícitamente del cache.
-- Fallback offline institucional sin datos privados.
-- QA: 5/5 escenarios PWA dedicados y regresión Playwright global 60/60; un
-  escenario Firebase se ejecuta por separado y permanece excluido de la suite
-  estándar.
-
-### Preparación Vercel
-
-- Rama: `chore/vercel-production-demo`.
-- CLI autenticada y team identificado.
-- Confirmado que no existe aún el proyecto Vercel `abastosdesula` y la URL
-  objetivo devuelve `DEPLOYMENT_NOT_FOUND`.
-- Node.js fijado a `22.x` y checklist de variables/deploy documentado.
-- No se creó proyecto ni deployment incompleto sin Firebase remoto.
-
-## Decisiones
-
-- Monolito modular.
-- Server Components por defecto.
-- UI desacoplada de Firebase/Supabase.
-- Datos demo marcados explícitamente.
-- `businessId` obligatorio para aislamiento privado.
-- Precios expresados en unidades menores.
-- El acceso local se conserva como fallback de QA cuando Firebase no está
-  configurado; con configuración presente se sustituye por Auth y sesión real.
-
-## Problemas conocidos
-
-- No existen todavía credenciales ni proyecto Firebase remoto en el workspace.
-  Por ello se validan Rules y arquitectura en emulador, pero no se ha activado ni
-  sembrado un entorno remoto.
-- El rate limit del endpoint público es in-memory y deberá reemplazarse por una
-  solución distribuida antes de una operación contractual.
-
-## Siguiente fase
-
-Obtener credenciales seguras de Firebase, activar Rules/seed, crear el proyecto
-Vercel `abastosdesula`, configurar variables y ejecutar auditoría HTTPS completa.
+La arquitectura mantiene contratos de repositorio independientes del proveedor.
+Una fase posterior puede migrar identidad y datos relacionales a
+Supabase/PostgreSQL, preservando `businessId` como clave de aislamiento,
+aplicando RLS equivalente y moviendo historial, cotizaciones y clientes a tablas
+normalizadas. La migración debe incluir reconciliación de usuarios, auditoría de
+roles y pruebas negativas equivalentes a las actuales Rules de Firestore.

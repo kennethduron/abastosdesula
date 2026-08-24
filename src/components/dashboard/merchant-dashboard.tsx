@@ -335,8 +335,8 @@ function DashboardView({
         )}
       </header>
 
-      <main className="pb-24 md:pb-10 lg:ml-64">
-        <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <main className="min-w-0 pb-24 md:pb-10 lg:ml-64">
+        <div className="mx-auto max-w-[1500px] min-w-0 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div
             id="resumen"
             className="flex scroll-mt-24 flex-col justify-between gap-3 sm:flex-row sm:items-end"
@@ -449,7 +449,7 @@ function DashboardView({
 
           <div
             id="productos"
-            className="mt-6 grid scroll-mt-24 gap-6 xl:grid-cols-[1.2fr_0.8fr]"
+            className="mt-6 grid min-w-0 scroll-mt-24 gap-6 xl:grid-cols-[1.2fr_0.8fr]"
           >
             <StatusOverview requests={requests} />
             <RecentCustomers requests={requests} />
@@ -673,7 +673,7 @@ function StatusOverview({ requests }: { requests: QuoteRequest[] }) {
   return (
     <section
       aria-labelledby="status-title"
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
       <h2 id="status-title" className="font-black text-brand-navy">
         Actividad por estado
@@ -712,7 +712,7 @@ function RecentCustomers({ requests }: { requests: QuoteRequest[] }) {
     <section
       id="clientes"
       aria-labelledby="customers-title"
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+      className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
     >
       <h2 id="customers-title" className="font-black text-brand-navy">
         Clientes recientes

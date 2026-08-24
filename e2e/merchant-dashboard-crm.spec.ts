@@ -123,6 +123,18 @@ test("dashboard remains error-free without horizontal overflow", async ({
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    await page
+      .getByRole("button", { name: /Restaurante El Buen Sabor/ })
+      .click();
+    const detail = page.getByRole("dialog", { name: "Detalle de solicitud" });
+    await expect(detail).toBeVisible();
+    await page.waitForTimeout(350);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await detail.getByRole("button", { name: "Cerrar detalle" }).click();
   }
   expect(errors).toEqual([]);
 });

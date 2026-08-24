@@ -1,4 +1,9 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 
 const firebaseE2E = process.env.PLAYWRIGHT_FIREBASE_E2E === "true";
 const merchantA = {
@@ -13,14 +18,108 @@ const admin = {
   email: process.env.DEMO_ADMIN_EMAIL ?? "",
   password: process.env.DEMO_ADMIN_PASSWORD ?? "",
 };
+const firestoreBase =
+  "https://firestore.googleapis.com/v1/projects/abastosdesula-demo/databases/(default)/documents";
 
-test.skip(!firebaseE2E, "Requires isolated Firebase Auth/Firestore emulators.");
+test.skip(!firebaseE2E, "Requires explicit Firebase E2E authorization.");
 
 async function login(page: Page, credentials: typeof merchantA) {
   await page.goto("/acceso");
   await page.getByLabel("Correo electrónico").fill(credentials.email);
   await page.getByLabel("Contraseña").fill(credentials.password);
+  const tokenResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("identitytoolkit.googleapis.com") &&
+      response.url().includes("accounts:signInWithPassword") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  const response = await tokenResponse;
+  expect(response.ok()).toBeTruthy();
+  const payload = (await response.json()) as { idToken?: string };
+  expect(payload.idToken).toBeTruthy();
+  return payload.idToken as string;
+}
+
+async function submitQuote(
+  page: Page,
+  merchantSlug: string,
+  customerName: string,
+) {
+  await page.goto(`/comerciantes/${merchantSlug}`);
+  await page
+    .getByTestId("catalog-product")
+    .first()
+    .getByRole("button", { name: "Agregar" })
+    .click();
+  const cart = page.getByRole("dialog", { name: "Tu solicitud" });
+  await cart.getByLabel("Nombre completo").fill(customerName);
+  await cart.getByLabel("Tipo de cliente").selectOption("business");
+  await cart.getByLabel("Teléfono").fill("99990000");
+  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
+  await expect(page.getByTestId("quote-confirmation")).toBeVisible();
+}
+
+async function findQuote(
+  request: APIRequestContext,
+  idToken: string,
+  businessId: string,
+  customerName: string,
+) {
+  const response = await request.post(`${firestoreBase}:runQuery`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+    data: {
+      structuredQuery: {
+        from: [{ collectionId: "quoteRequests" }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: "businessId" },
+            op: "EQUAL",
+            value: { stringValue: businessId },
+          },
+        },
+      },
+    },
+  });
+  expect(response.status()).toBe(200);
+  const rows = (await response.json()) as Array<{
+    document?: {
+      name: string;
+      fields: Record<string, { stringValue?: string }>;
+    };
+  }>;
+  const document = rows
+    .map((row) => row.document)
+    .find((item) => item?.fields.customerName?.stringValue === customerName);
+  expect(document).toBeTruthy();
+  return {
+    id: document?.name.split("/").at(-1) as string,
+    customerId: document?.fields.customerId.stringValue as string,
+  };
+}
+
+async function expectQuoteStatus(
+  request: APIRequestContext,
+  idToken: string,
+  quoteId: string,
+  expectedStatus: string,
+) {
+  await expect
+    .poll(
+      async () => {
+        const response = await request.get(
+          `${firestoreBase}/quoteRequests/${quoteId}`,
+          { headers: { Authorization: `Bearer ${idToken}` } },
+        );
+        if (response.status() !== 200) return `HTTP_${response.status()}`;
+        const document = (await response.json()) as {
+          fields?: { status?: { stringValue?: string } };
+        };
+        return document.fields?.status?.stringValue ?? "MISSING";
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(expectedStatus);
 }
 
 test("Firebase persists a quote workflow and isolates another merchant", async ({
@@ -34,41 +133,74 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
   page.on("pageerror", (error) => consoleErrors.push(error.message));
   await request.delete("/api/auth/session");
 
-  const customerName = `Cliente Firebase ${Date.now()}`;
-  await page.goto("/comerciantes/comercial-frutas-del-valle");
-  await page
-    .getByTestId("catalog-product")
-    .first()
-    .getByRole("button", { name: "Agregar" })
-    .click();
-  const cart = page.getByRole("dialog", { name: "Tu solicitud" });
-  await cart.getByLabel("Nombre completo").fill(customerName);
-  await cart.getByLabel("Tipo de cliente").selectOption("business");
-  await cart.getByLabel("Teléfono").fill("99990000");
-  await cart.getByRole("button", { name: "Enviar solicitud demo" }).click();
-  await expect(page.getByTestId("quote-confirmation")).toBeVisible();
+  const auditSuffix = Date.now();
+  const customerNameA = `Cliente Auditoría A ${auditSuffix}`;
+  const customerNameB = `Cliente Auditoría B ${auditSuffix}`;
+  await submitQuote(page, "comercial-frutas-del-valle", customerNameA);
+  await submitQuote(page, "verduras-la-huerta", customerNameB);
 
-  await login(page, merchantA);
+  const merchantAToken = await login(page, merchantA);
   await expect(page).toHaveURL(/\/panel$/);
-  await expect(page.getByText(customerName).first()).toBeVisible();
+  await expect(page.getByText(customerNameA).first()).toBeVisible();
+  await expect(page.getByText(customerNameB)).toHaveCount(0);
+  const quoteA = await findQuote(
+    request,
+    merchantAToken,
+    "business-frutas-valle",
+    customerNameA,
+  );
+
   await page
     .getByRole("button")
-    .filter({ hasText: customerName })
+    .filter({ hasText: customerNameA })
     .first()
     .click();
   const status = page.getByLabel("Estado de la solicitud");
   await status.selectOption("in_review");
-  await expect(status).toHaveValue("in_review");
+  await expectQuoteStatus(request, merchantAToken, quoteA.id, "in_review");
   await page.reload();
-  await expect(page.getByText(customerName).first()).toBeVisible();
+  await expect(page.getByText(customerNameA).first()).toBeVisible();
   await page
     .getByRole("button")
-    .filter({ hasText: customerName })
+    .filter({ hasText: customerNameA })
     .first()
     .click();
   await expect(page.getByLabel("Estado de la solicitud")).toHaveValue(
     "in_review",
   );
+  await page.getByLabel("Estado de la solicitud").selectOption("quoted");
+  await expectQuoteStatus(request, merchantAToken, quoteA.id, "quoted");
+  await page.reload();
+  await expect(page.getByText(customerNameA).first()).toBeVisible();
+  await page
+    .getByRole("button")
+    .filter({ hasText: customerNameA })
+    .first()
+    .click();
+  await expect(page.getByLabel("Estado de la solicitud")).toHaveValue("quoted");
+
+  const privateProductId = `product-private-audit-${auditSuffix}`;
+  const privateProduct = await request.post(
+    `${firestoreBase}/products?documentId=${privateProductId}`,
+    {
+      headers: { Authorization: `Bearer ${merchantAToken}` },
+      data: {
+        fields: {
+          id: { stringValue: privateProductId },
+          businessId: { stringValue: "business-frutas-valle" },
+          categoryId: { stringValue: "category-fruits" },
+          name: { stringValue: "Producto privado de auditoría" },
+          unit: { stringValue: "unidad" },
+          status: { stringValue: "inactive" },
+          availability: { stringValue: "unavailable" },
+          isDemo: { booleanValue: true },
+          createdAt: { stringValue: new Date().toISOString() },
+          updatedAt: { stringValue: new Date().toISOString() },
+        },
+      },
+    },
+  );
+  expect(privateProduct.status()).toBe(200);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.screenshot({
     path: "artifacts/firebase/merchant-a-persisted-quote-1440x900.png",
@@ -76,9 +208,39 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
   });
 
   await request.delete("/api/auth/session");
-  await login(page, merchantB);
+  const merchantBToken = await login(page, merchantB);
   await expect(page).toHaveURL(/\/panel$/);
-  await expect(page.getByText(customerName)).toHaveCount(0);
+  await expect(page.getByText(customerNameA)).toHaveCount(0);
+  await expect(page.getByText(customerNameB).first()).toBeVisible();
+  const quoteB = await findQuote(
+    request,
+    merchantBToken,
+    "business-la-huerta",
+    customerNameB,
+  );
+  const merchantBReadingQuoteA = await request.get(
+    `${firestoreBase}/quoteRequests/${quoteA.id}`,
+    { headers: { Authorization: `Bearer ${merchantBToken}` } },
+  );
+  expect(merchantBReadingQuoteA.status()).toBe(403);
+  const merchantBReadingCustomerA = await request.get(
+    `${firestoreBase}/customers/${quoteA.customerId}`,
+    { headers: { Authorization: `Bearer ${merchantBToken}` } },
+  );
+  expect(merchantBReadingCustomerA.status()).toBe(403);
+  const merchantBReadingPrivateProductA = await request.get(
+    `${firestoreBase}/products/${privateProductId}`,
+    { headers: { Authorization: `Bearer ${merchantBToken}` } },
+  );
+  expect(merchantBReadingPrivateProductA.status()).toBe(403);
+  const merchantAReadingQuoteB = await request.get(
+    `${firestoreBase}/quoteRequests/${quoteB.id}`,
+    { headers: { Authorization: `Bearer ${merchantAToken}` } },
+  );
+  expect(merchantAReadingQuoteB.status()).toBe(403);
+  await page.goto("/panel?businessId=business-frutas-valle");
+  await expect(page.getByText("Verduras La Huerta").first()).toBeVisible();
+  await expect(page.getByText(customerNameA)).toHaveCount(0);
   await page.goto("/admin");
   await expect(page).toHaveURL(/\/panel$/);
 
@@ -88,7 +250,8 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
   await expect(
     page.getByRole("heading", { name: "Resumen de la plataforma" }),
   ).toBeVisible();
-  await expect(page.getByText(customerName)).toHaveCount(0);
+  await expect(page.getByText(customerNameA)).toHaveCount(0);
+  await expect(page.getByText(customerNameB)).toHaveCount(0);
   await page.goto("/panel");
   await expect(page).toHaveURL(/\/admin$/);
   await page.screenshot({

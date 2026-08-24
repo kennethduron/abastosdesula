@@ -52,10 +52,19 @@ beforeEach(async () => {
         customerId: "customer-b",
         status: "new",
       }),
+      setDoc(doc(db, "customers", "customer-a"), {
+        businessId: "business-a",
+        name: "Cliente A",
+      }),
       setDoc(doc(db, "products", "product-a"), {
         businessId: "business-a",
         status: "active",
         name: "Producto A",
+      }),
+      setDoc(doc(db, "products", "product-private-a"), {
+        businessId: "business-a",
+        status: "inactive",
+        name: "Producto privado A",
       }),
       setDoc(doc(db, "activities", "activity-a"), {
         businessId: "business-a",
@@ -115,6 +124,17 @@ describe("Firestore multitenant rules", () => {
     );
   });
 
+  it("isolates private customers and inactive products by tenant", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    const merchantB = merchant("merchant-b", "business-b");
+    await assertSucceeds(getDoc(doc(merchantA, "customers", "customer-a")));
+    await assertSucceeds(
+      getDoc(doc(merchantA, "products", "product-private-a")),
+    );
+    await assertFails(getDoc(doc(merchantB, "customers", "customer-a")));
+    await assertFails(getDoc(doc(merchantB, "products", "product-private-a")));
+  });
+
   it("allows workflow fields but rejects customer or item tampering", async () => {
     const db = merchant("merchant-a", "business-a");
     await assertSucceeds(
@@ -142,6 +162,7 @@ describe("Firestore multitenant rules", () => {
       })
       .firestore();
     await assertFails(getDoc(doc(db, "quoteRequests", "quote-a")));
+    await assertFails(getDoc(doc(db, "customers", "customer-a")));
     const activity = await assertSucceeds(
       getDoc(doc(db, "activities", "activity-a")),
     );

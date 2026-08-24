@@ -34,6 +34,11 @@ if (process.env.DEMO_SEED_CONFIRM !== "abastosdesula-demo") {
 }
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
+if (projectId !== "abastosdesula-demo") {
+  throw new Error(
+    "FIREBASE_PROJECT_ID no corresponde al proyecto demo autorizado.",
+  );
+}
 const explicitCredentials = Boolean(
   process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY,
 );
@@ -53,6 +58,17 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 async function mergeKnownDocuments(collectionName, documents) {
+  const references = documents.map((document) =>
+    db.collection(collectionName).doc(document.id),
+  );
+  const existing = await db.getAll(...references);
+  for (const snapshot of existing) {
+    if (snapshot.exists && snapshot.data()?.isDemo !== true) {
+      throw new Error(
+        `Seed bloqueado: ${collectionName}/${snapshot.id} no es un documento demo.`,
+      );
+    }
+  }
   const batch = db.batch();
   for (const document of documents) {
     batch.set(db.collection(collectionName).doc(document.id), document, {
@@ -64,7 +80,15 @@ async function mergeKnownDocuments(collectionName, documents) {
 
 async function createPrivateFixtureIfMissing(fixture) {
   const quoteRef = db.collection("quoteRequests").doc(fixture.id);
-  if ((await quoteRef.get()).exists) return false;
+  const existingQuote = await quoteRef.get();
+  if (existingQuote.exists) {
+    if (existingQuote.data()?.isDemo !== true) {
+      throw new Error(
+        `Seed bloqueado: quoteRequests/${fixture.id} no es un documento demo.`,
+      );
+    }
+    return false;
+  }
   const timestamp = Timestamp.now();
   const customerRef = db.collection("customers").doc(fixture.customerId);
   const activityRef = db.collection("activities").doc(`activity-${fixture.id}`);

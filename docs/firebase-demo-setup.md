@@ -1,74 +1,104 @@
 # Configuración de Firebase para la demo
 
-Firebase es un backend temporal. Vercel continúa siendo el hosting del frontend;
-no se utiliza Firebase Hosting.
+Firebase es el backend temporal; Vercel aloja la aplicación. El proyecto remoto
+autorizado es exclusivamente `abastosdesula-demo`.
 
-## Proyecto y servicios
+## Servicios requeridos
 
-1. Crear o seleccionar un proyecto Firebase dedicado a esta demo.
-2. Habilitar Authentication con Email/Password.
-3. Crear Cloud Firestore en la región aprobada para la demostración.
-4. Registrar una Web App y copiar sus identificadores públicos.
-5. Crear una service account de alcance mínimo para Vercel.
+- Firebase Authentication con Email/Password habilitado.
+- Authorized Domain `abastosdesula.vercel.app`.
+- Cloud Firestore `(default)` en modo Native.
+- Reglas restrictivas e índices de `firebase/firestore.indexes.json` desplegados.
+- Una Web App para la configuración pública.
+- Una service account de mínimo privilegio para Firebase Admin.
 
-No descargues ni copies un JSON de service account dentro del repositorio.
+No guardes un JSON de service account dentro del repositorio.
 
 ## Variables
 
-Copia `.env.example` a `.env.local` y completa:
+Configuración pública de la Web App:
 
-- `NEXT_PUBLIC_FIREBASE_*`: identificadores públicos de la Web App.
-- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`:
-  credenciales exclusivas del servidor.
-- `DEMO_MERCHANT_*`, `DEMO_MERCHANT_B_*` y `DEMO_ADMIN_*`: credenciales
-  temporales del seed. El segundo merchant existe únicamente para probar
-  aislamiento entre tenants.
-- `DEMO_SEED_CONFIRM=abastosdesula-demo`: confirmación explícita del seed.
+```text
+NEXT_PUBLIC_FIREBASE_API_KEY
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+NEXT_PUBLIC_FIREBASE_PROJECT_ID
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_FIREBASE_APP_ID
+```
 
-En `FIREBASE_PRIVATE_KEY`, conserva saltos como `\n` si la variable está en una
-sola línea. Nunca uses `NEXT_PUBLIC_` para credenciales Admin o contraseñas.
+Configuración exclusiva del servidor:
 
-## Reglas y emulador
+```text
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
+```
 
-Con Java 21 instalado:
+Credenciales del entorno demo, nunca versionadas ni impresas:
+
+```text
+DEMO_MERCHANT_EMAIL
+DEMO_MERCHANT_PASSWORD
+DEMO_MERCHANT_B_EMAIL
+DEMO_MERCHANT_B_PASSWORD
+DEMO_ADMIN_EMAIL
+DEMO_ADMIN_PASSWORD
+DEMO_SEED_CONFIRM
+```
+
+`DEMO_SEED_CONFIRM` debe autorizar exactamente `abastosdesula-demo`. La clave
+privada admite saltos reales o `\n` escapados; el adaptador normaliza estos
+últimos antes de validarla criptográficamente. Nunca uses `NEXT_PUBLIC_` para
+credenciales Admin o contraseñas.
+
+## Auditoría segura
+
+Con las variables cargadas en el proceso:
+
+```bash
+pnpm firebase:audit
+```
+
+La auditoría solo lee: valida el proyecto, coincidencia cliente/servidor,
+formato del email, estructura criptográfica de la clave, conteos de colecciones,
+usuarios esperados y custom claims. Su salida usa únicamente estados y conteos.
+
+## Reglas e índices
 
 ```bash
 pnpm test:firebase-rules
+pnpm exec firebase deploy --only firestore:rules,firestore:indexes --project abastosdesula-demo
 ```
 
-La suite verifica anonimato, aislamiento Merchant A/B, cambios manuales de
-`businessId`, campos permitidos del workflow, privacidad institucional y
-notificaciones por tenant.
-
-Con autenticación CLI válida, despliega solo reglas e índices:
-
-```bash
-pnpm exec firebase deploy --only firestore:rules,firestore:indexes
-```
-
-Verifica el proyecto activo antes de desplegar. `demo-abastosdesula` se reserva
-para emuladores y no representa un proyecto remoto.
+Las pruebas cubren anonimato, aislamiento Merchant A/B, cotizaciones, clientes,
+productos privados, reasignación de tenant, campos de workflow, privacidad del
+admin institucional y notificaciones.
 
 ## Seed controlado
+
+Ejecuta el seed solo después de que `firebase:audit` confirme el proyecto y no
+existan colisiones desconocidas:
 
 ```bash
 pnpm firebase:seed
 ```
 
-El seed prepara dos merchants y un administrador con custom claims; fusiona seis
-comercios, cinco categorías, seis perfiles y doce productos; y crea dos clientes,
-solicitudes, actividades y notificaciones conocidas solo si no existen. Nunca
-borra colecciones, recorre datos desconocidos ni imprime credenciales. Repetirlo
-preserva solicitudes y estados existentes.
+El seed exige el project ID exacto, no borra datos y usa IDs conocidos. Antes de
+fusionar un documento existente exige `isDemo=true`; una colisión con datos no
+demo aborta la operación. Crea o actualiza únicamente los tres usuarios demo,
+sus claims y sus documentos asociados. Repetirlo conserva solicitudes y estados
+ya existentes.
 
-## Activación y QA
+## QA de producción
 
-1. Iniciar `pnpm dev` con variables configuradas.
-2. Abrir `/acceso` y probar ambos roles.
-3. Confirmar que merchant entra a `/panel` y admin a `/admin`.
-4. Enviar una solicitud pública y verla en el CRM.
-5. Cambiar estado, refrescar y comprobar persistencia.
-6. Repetir acceso cruzado y revisar logs sin exponer payloads privados.
+La prueba Firebase real se habilita explícitamente y recibe credenciales por el
+entorno, no por argumentos ni archivos versionados:
 
-Sin configuración, `/acceso` informa que se usa el fallback local de QA. Ese
-modo no debe presentarse como autenticación real.
+```bash
+PLAYWRIGHT_BASE_URL=https://abastosdesula.vercel.app \
+PLAYWRIGHT_FIREBASE_E2E=true pnpm playwright test e2e/firebase-live.spec.ts
+```
+
+Valida login, cotización, persistencia, transición de estado, aislamiento
+multitenant, URL manipulada y restricciones institucionales.
