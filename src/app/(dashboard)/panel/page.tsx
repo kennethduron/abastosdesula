@@ -48,6 +48,15 @@ export default async function MerchantPanelPage() {
     return (
       <MerchantDashboard
         businesses={businesses}
+        products={demoProducts.map((product) => ({
+          id: product.id,
+          businessId: product.businessId,
+          name: product.name,
+          unit: product.unit,
+          image: product.image,
+          imageAlt: product.imageAlt,
+          referencePriceMinor: product.referencePrice.amountMinor,
+        }))}
         firebaseSession={{
           role: "merchant",
           businessId: business.id,
@@ -57,5 +66,18 @@ export default async function MerchantPanelPage() {
     );
   }
 
-  return <MerchantDashboard businesses={businesses} />;
+  return (
+    <MerchantDashboard
+      businesses={businesses}
+      products={demoProducts.map((product) => ({
+        id: product.id,
+        businessId: product.businessId,
+        name: product.name,
+        unit: product.unit,
+        image: product.image,
+        imageAlt: product.imageAlt,
+        referencePriceMinor: product.referencePrice.amountMinor,
+      }))}
+    />
+  );
 }

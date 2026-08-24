@@ -31,7 +31,7 @@ test("public customer creates a validated demo quote request", async ({
   await expect(page.getByTestId("quote-confirmation")).toBeVisible();
   await expect(page.getByText("Solicitud recibida")).toBeVisible();
   const stored = await page.evaluate(() =>
-    JSON.parse(window.localStorage.getItem("abastos-demo-quotes-v1") ?? "[]"),
+    JSON.parse(window.localStorage.getItem("abastos-demo-quotes-v2") ?? "[]"),
   );
   expect(stored).toHaveLength(1);
   expect(stored[0]).toMatchObject({

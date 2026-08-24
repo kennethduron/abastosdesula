@@ -13,6 +13,7 @@ import { isFirebaseClientConfigured } from "@/data/adapters/firebase/config";
 
 const customerDetailsSchema = publicQuoteRequestSchema.pick({
   customerName: true,
+  company: true,
   customerType: true,
   phone: true,
   whatsapp: true,
@@ -80,12 +81,25 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
     const request = saveDemoQuoteRequest({
       businessName: cart.items[0].businessName,
       input,
-      items: cart.items.map(({ productId, productName, quantity, unit }) => ({
-        productId,
-        productName,
-        quantity,
-        unit,
-      })),
+      items: cart.items.map(
+        ({
+          productId,
+          productName,
+          quantity,
+          unit,
+          image,
+          imageAlt,
+          priceMinor,
+        }) => ({
+          productId,
+          productName,
+          quantity,
+          unit,
+          image,
+          imageAlt,
+          referencePriceMinor: priceMinor,
+        }),
+      ),
     });
     setConfirmationId(request.id);
     completeCart();
@@ -142,6 +156,16 @@ export function QuoteRequestForm({ onClose }: { onClose: () => void }) {
               {errors.customerName.message}
             </span>
           )}
+        </label>
+        <label className="block text-xs font-bold text-slate-600">
+          Empresa (opcional)
+          <input
+            {...register("company", {
+              setValueAs: (value) => value || undefined,
+            })}
+            autoComplete="organization"
+            className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 px-3 text-sm font-normal text-brand-navy outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/10"
+          />
         </label>
         <label className="block text-xs font-bold text-slate-600">
           Tipo de cliente

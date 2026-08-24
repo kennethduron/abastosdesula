@@ -155,6 +155,92 @@ describe("Firestore multitenant rules", () => {
     );
   });
 
+  it("allows a merchant to create only a valid manual request for its business", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    const manualRequest = {
+      id: "quote-manual-a",
+      businessId: "business-a",
+      customerId: "customer-a",
+      customerName: "Cliente A",
+      customerType: "business",
+      phone: "99990000",
+      source: "phone",
+      fulfillment: "coordinate",
+      items: [{ productId: "product-a", quantity: 2, unit: "unidad" }],
+      status: "new",
+      history: [{ status: "new", changedAt: "2026-08-23T00:00:00.000Z" }],
+      internalNotes: [],
+      followUps: [],
+      activity: [],
+    };
+    await assertSucceeds(
+      setDoc(doc(merchantA, "quoteRequests", "quote-manual-a"), manualRequest),
+    );
+    await assertFails(
+      setDoc(doc(merchantA, "quoteRequests", "quote-manual-b"), {
+        ...manualRequest,
+        id: "quote-manual-b",
+        businessId: "business-b",
+      }),
+    );
+  });
+
+  it("allows private CRM workflow updates and rejects identity changes", async () => {
+    const db = merchant("merchant-a", "business-a");
+    await assertSucceeds(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        internalNotes: [
+          {
+            id: "note-a",
+            body: "Precio especial",
+            createdAt: "2026-08-23T00:00:00.000Z",
+          },
+        ],
+        followUps: [
+          {
+            id: "follow-a",
+            title: "Llamar",
+            dueAt: "2026-08-25T15:00:00.000Z",
+            status: "pending",
+          },
+        ],
+        activity: [
+          {
+            id: "activity-a",
+            type: "note_added",
+            description: "Nota agregada",
+            createdAt: "2026-08-23T00:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "quoteRequests", "quote-a"), {
+        phone: "00000000",
+      }),
+    );
+  });
+
+  it("allows customer notes without allowing contact or tenant changes", async () => {
+    const db = merchant("merchant-a", "business-a");
+    await assertSucceeds(
+      updateDoc(doc(db, "customers", "customer-a"), {
+        internalNotes: [
+          {
+            id: "note-a",
+            body: "Cliente frecuente",
+            createdAt: "2026-08-23T00:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(db, "customers", "customer-a"), {
+        phone: "00000000",
+      }),
+    );
+  });
+
   it("keeps detailed quotes private from institutional admin", async () => {
     const db = environment
       .authenticatedContext("admin", {
