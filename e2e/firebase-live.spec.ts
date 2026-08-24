@@ -438,7 +438,7 @@ test("a new identity receives institutional read-only access", async ({
   await expect(page.getByTestId("admin-tenants")).toBeVisible();
   await expect(page.locator("#comerciantes select").first()).toBeDisabled();
 
-  const session = await request.get("/api/auth/session");
+  const session = await page.context().request.get("/api/auth/session");
   expect(session.status()).toBe(200);
   expect(await session.json()).toEqual({
     authenticated: true,
