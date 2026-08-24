@@ -116,10 +116,11 @@ export function LoginForm({
           className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 font-medium outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/15"
         />
       </label>
-      <label className="block text-sm font-bold text-brand-navy">
-        Contraseña
+      <div className="block text-sm font-bold text-brand-navy">
+        <label htmlFor="password">Contraseña</label>
         <span className="relative mt-2 block">
           <input
+            id="password"
             name="password"
             type={passwordVisible ? "text" : "password"}
             autoComplete="current-password"
@@ -144,7 +145,7 @@ export function LoginForm({
             )}
           </button>
         </span>
-      </label>
+      </div>
       {error && (
         <p
           role="alert"
