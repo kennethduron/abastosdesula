@@ -25,6 +25,14 @@ service cloud.firestore {
       return isActiveUser() && request.auth.token.role == 'institutional_admin';
     }
 
+    function isPresentationViewer() {
+      return isActiveUser() && request.auth.token.role == 'presentation_viewer';
+    }
+
+    function isInstitutionalReader() {
+      return isInstitutionalAdmin() || isPresentationViewer();
+    }
+
     function isQuoteStatus(status) {
       return status in [
         'new',
@@ -66,7 +74,7 @@ service cloud.firestore {
     }
 
     match /businesses/{businessId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(businessId);
+      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(businessId);
       allow create, delete: if isInstitutionalAdmin();
       allow update: if isInstitutionalAdmin() ||
         (ownsBusiness(businessId) && request.resource.data.id == resource.data.id &&
@@ -74,7 +82,7 @@ service cloud.firestore {
     }
 
     match /merchants/{merchantId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
       allow create: if isInstitutionalAdmin();
       allow update: if isInstitutionalAdmin() ||
         (ownsBusiness(resource.data.businessId) &&
@@ -83,12 +91,12 @@ service cloud.firestore {
     }
 
     match /categories/{categoryId} {
-      allow read: if resource.data.visible == true || isInstitutionalAdmin();
+      allow read: if resource.data.visible == true || isInstitutionalReader();
       allow write: if isInstitutionalAdmin();
     }
 
     match /products/{productId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
       allow create: if ownsBusiness(request.resource.data.businessId);
       allow update: if ownsBusiness(resource.data.businessId) &&
         request.resource.data.businessId == resource.data.businessId;
@@ -128,7 +136,18 @@ service cloud.firestore {
     }
 
     match /activities/{activityId} {
-      allow read: if isInstitutionalAdmin() || ownsBusiness(resource.data.businessId);
+      allow read: if isInstitutionalReader() || ownsBusiness(resource.data.businessId);
+      allow write: if false;
+    }
+
+    match /tenantAccounts/{businessId} {
+      allow read: if isInstitutionalReader() ||
+        (ownsBusiness(businessId) && resource.data.businessId == businessId);
+      allow write: if false;
+    }
+
+    match /tenantPayments/{paymentId} {
+      allow read: if isInstitutionalReader() || ownsBusiness(resource.data.businessId);
       allow write: if false;
     }
 

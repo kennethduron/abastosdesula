@@ -15,10 +15,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
-    "test:firebase-rules": "firebase emulators:exec --only firestore --project demo-abastosdesula \"node --test firebase/firestore.rules.test.mjs\"",
+    "test:firebase-rules": "node scripts/run-firestore-rules-tests.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "firebase:seed": "node scripts/seed-firebase-demo.mjs"
+    "firebase:seed": "node scripts/seed-firebase-demo.mjs",
+    "firebase:provision-tenant-service": "node --env-file=.env.presentation.local scripts/provision-tenant-self-service.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

@@ -44,7 +44,11 @@ export async function getAppSessionState(): Promise<AppSessionState> {
       true,
     );
     const role = decoded.role;
-    if (role !== "merchant" && role !== "institutional_admin") {
+    if (
+      role !== "merchant" &&
+      role !== "institutional_admin" &&
+      role !== "presentation_viewer"
+    ) {
       return { status: "invalid" };
     }
     const userRecord = await getFirebaseAdminDb()

@@ -63,12 +63,17 @@ export default async function InstitutionalAdminPage() {
       redirect(`/acceso?next=/admin${reason}`);
     }
     const session = sessionState.session;
-    if (session.role !== "institutional_admin") redirect("/panel");
+    if (
+      session.role !== "institutional_admin" &&
+      session.role !== "presentation_viewer"
+    )
+      redirect("/panel");
     return (
       <InstitutionalAdmin
         businesses={businesses}
         categories={categories}
         firebaseAuthenticated
+        firebaseRole={session.role}
       />
     );
   }

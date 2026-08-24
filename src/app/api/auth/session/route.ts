@@ -61,7 +61,11 @@ export async function POST(request: Request) {
       );
     }
     const role = decoded.role;
-    if (role !== "merchant" && role !== "institutional_admin") {
+    if (
+      role !== "merchant" &&
+      role !== "institutional_admin" &&
+      role !== "presentation_viewer"
+    ) {
       return Response.json({ error: "Rol no autorizado." }, { status: 403 });
     }
     if (role === "merchant" && typeof decoded.businessId !== "string") {

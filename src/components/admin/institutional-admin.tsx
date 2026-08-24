@@ -19,12 +19,14 @@ import {
   Settings2,
   ShieldCheck,
   Store,
+  UsersRound,
   X,
 } from "lucide-react";
 import { useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 
+import { InstitutionalTenantSection } from "@/components/admin/institutional-tenant-section";
 import { Brand } from "@/components/layout/brand";
 import {
   getDemoSessionServerSnapshot,
@@ -49,8 +51,13 @@ import {
   subscribeToStoredDemoQuoteRequests,
 } from "@/data/adapters/browser/quote-request-store";
 import { useFirebaseInstitutionalActivities } from "@/data/adapters/firebase/use-institutional-activities";
+import { useFirebaseTenantBilling } from "@/data/adapters/firebase/use-tenant-billing";
 import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
-import type { BusinessStatus, QuoteRequestStatus } from "@/domain";
+import {
+  tenantAccountFixtures,
+  tenantPaymentFixtures,
+} from "@/data/tenant-billing-fixtures";
+import type { BusinessStatus, QuoteRequestStatus, UserRole } from "@/domain";
 import { cn } from "@/lib/utils";
 
 interface AdminBusiness {
@@ -95,10 +102,15 @@ export function InstitutionalAdmin({
   businesses,
   categories,
   firebaseAuthenticated = false,
+  firebaseRole,
 }: {
   businesses: AdminBusiness[];
   categories: AdminCategory[];
   firebaseAuthenticated?: boolean;
+  firebaseRole?: Extract<
+    UserRole,
+    "institutional_admin" | "presentation_viewer"
+  >;
 }) {
   const sessionSnapshot = useSyncExternalStore(
     subscribeToDemoSession,
@@ -106,13 +118,16 @@ export function InstitutionalAdmin({
     getDemoSessionServerSnapshot,
   );
   const session = firebaseAuthenticated
-    ? ({ role: "institutional_admin" } as const)
+    ? ({ role: firebaseRole ?? "institutional_admin" } as const)
     : parseDemoSession(sessionSnapshot);
 
   if (session?.role === "merchant") {
     return <RestrictedMerchantAccess businessName={session.businessName} />;
   }
-  if (session?.role !== "institutional_admin") {
+  if (
+    session?.role !== "institutional_admin" &&
+    session?.role !== "presentation_viewer"
+  ) {
     return <AdminAccessGate />;
   }
   return (
@@ -120,6 +135,7 @@ export function InstitutionalAdmin({
       businesses={businesses}
       categories={categories}
       firebaseAuthenticated={firebaseAuthenticated}
+      role={session.role}
     />
   );
 }
@@ -137,8 +153,8 @@ function AdminAccessGate() {
           Administración central
         </h1>
         <p className="mt-3 leading-7 text-slate-600">
-          Consulta actividad agregada, comerciantes y contenido institucional
-          desde una vista de revisión autorizada.
+          Consulta actividad agregada, comerciantes, inquilinos y contenido
+          institucional desde una vista autorizada.
         </p>
         <button
           type="button"
@@ -152,7 +168,7 @@ function AdminAccessGate() {
           <ChevronRight className="size-4" aria-hidden="true" />
         </button>
         <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-          Información institucional agregada · Sin datos financieros privados
+          Información institucional protegida
         </p>
       </section>
     </main>
@@ -194,10 +210,12 @@ function AdminDashboard({
   businesses,
   categories,
   firebaseAuthenticated,
+  role,
 }: {
   businesses: AdminBusiness[];
   categories: AdminCategory[];
   firebaseAuthenticated: boolean;
+  role: Extract<UserRole, "institutional_admin" | "presentation_viewer">;
 }) {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -222,6 +240,17 @@ function AdminDashboard({
   const firebaseActivity = useFirebaseInstitutionalActivities(
     firebaseAuthenticated,
   );
+  const firebaseBilling = useFirebaseTenantBilling({
+    enabled: firebaseAuthenticated,
+    institutional: true,
+  });
+  const tenantAccounts = firebaseAuthenticated
+    ? firebaseBilling.accounts
+    : tenantAccountFixtures;
+  const tenantPayments = firebaseAuthenticated
+    ? firebaseBilling.payments
+    : tenantPaymentFixtures;
+  const readOnly = role === "presentation_viewer";
   const requestActivities = firebaseAuthenticated
     ? firebaseActivity.activities.filter(
         (activity) => activity.type === "quote_request_created",
@@ -257,12 +286,14 @@ function AdminDashboard({
             <ShieldCheck className="size-6" aria-hidden="true" />
           </span>
           <p className="mt-3 font-extrabold">Administración Central</p>
-          <p className="mt-1 text-xs text-blue-200">Rol institucional</p>
+          <p className="mt-1 text-xs text-blue-200">
+            {readOnly ? "Consulta institucional" : "Rol institucional"}
+          </p>
         </div>
-        <AdminNav />
+        <AdminNav readOnly={readOnly} />
         <div className="mt-auto border-t border-white/10 pt-5">
           <p className="text-xs text-slate-400">
-            Vista agregada · Sin finanzas privadas
+            Información institucional protegida
           </p>
           <button
             type="button"
@@ -300,7 +331,9 @@ function AdminDashboard({
           </div>
           <span className="hidden items-center gap-2 rounded-full bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 sm:inline-flex">
             <ShieldCheck className="size-4" aria-hidden="true" />
-            Administrador institucional
+            {readOnly
+              ? "Consulta institucional"
+              : "Administrador institucional"}
           </span>
           <span className="grid size-10 place-items-center rounded-full bg-slate-100 text-brand-navy">
             <CircleUserRound className="size-5" aria-hidden="true" />
@@ -308,7 +341,11 @@ function AdminDashboard({
         </div>
         {mobileMenuOpen && (
           <div className="border-t border-slate-200 bg-white px-4 py-4 lg:hidden">
-            <AdminNav light onNavigate={() => setMobileMenuOpen(false)} />
+            <AdminNav
+              light
+              readOnly={readOnly}
+              onNavigate={() => setMobileMenuOpen(false)}
+            />
             <button
               type="button"
               onClick={() =>
@@ -407,7 +444,10 @@ function AdminDashboard({
                         {business.requestCount}
                       </td>
                       <td className="px-5 py-4">
-                        <MerchantStatusSelect business={business} />
+                        <MerchantStatusSelect
+                          business={business}
+                          readOnly={readOnly}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -439,12 +479,24 @@ function AdminDashboard({
                     </div>
                   </dl>
                   <div className="mt-3">
-                    <MerchantStatusSelect business={business} fullWidth />
+                    <MerchantStatusSelect
+                      business={business}
+                      fullWidth
+                      readOnly={readOnly}
+                    />
                   </div>
                 </li>
               ))}
             </ul>
           </section>
+
+          <InstitutionalTenantSection
+            accounts={tenantAccounts}
+            payments={tenantPayments}
+            loading={firebaseBilling.loading}
+            error={firebaseBilling.error}
+            readOnly={readOnly}
+          />
 
           <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
             <section
@@ -523,70 +575,77 @@ function AdminDashboard({
             </section>
           </div>
 
-          <section
-            id="contenido"
-            className="mt-6 scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-              <div>
-                <h2 className="text-lg font-black text-brand-navy">
-                  Gestión de contenido
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Administra la visibilidad de las categorías publicadas en el
-                  catálogo.
-                </p>
+          {!readOnly && (
+            <section
+              id="contenido"
+              className="mt-6 scroll-mt-24 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+            >
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <h2 className="text-lg font-black text-brand-navy">
+                    Gestión de contenido
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Administra la visibilidad de las categorías publicadas en el
+                    catálogo.
+                  </p>
+                </div>
+                <span className="w-fit rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
+                  Control de visibilidad
+                </span>
               </div>
-              <span className="w-fit rounded-full bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800">
-                Control de visibilidad
-              </span>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-              {categories.map((category) => {
-                const hidden = adminState.hiddenCategoryIds.includes(
-                  category.id,
-                );
-                return (
-                  <article
-                    key={category.id}
-                    className="rounded-2xl border border-slate-200 p-4"
-                  >
-                    <span
-                      className={cn(
-                        "grid size-10 place-items-center rounded-xl",
-                        hidden
-                          ? "bg-slate-100 text-slate-500"
-                          : "bg-brand-green-pale text-brand-green-dark",
-                      )}
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                {categories.map((category) => {
+                  const hidden = adminState.hiddenCategoryIds.includes(
+                    category.id,
+                  );
+                  return (
+                    <article
+                      key={category.id}
+                      className="rounded-2xl border border-slate-200 p-4"
                     >
-                      {hidden ? (
-                        <EyeOff className="size-5" />
-                      ) : (
-                        <Eye className="size-5" />
-                      )}
-                    </span>
-                    <h3 className="mt-3 font-extrabold text-brand-navy">
-                      {category.name}
-                    </h3>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">
-                      {category.productCount} productos ·{" "}
-                      {category.merchantCount} comerciantes
-                    </p>
-                    <button
-                      type="button"
-                      aria-pressed={!hidden}
-                      onClick={() =>
-                        toggleDemoCategoryVisibility(category.id, category.name)
-                      }
-                      className="mt-4 min-h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-bold text-brand-navy hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-blue"
-                    >
-                      {hidden ? "Mostrar en catálogo" : "Ocultar del catálogo"}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
+                      <span
+                        className={cn(
+                          "grid size-10 place-items-center rounded-xl",
+                          hidden
+                            ? "bg-slate-100 text-slate-500"
+                            : "bg-brand-green-pale text-brand-green-dark",
+                        )}
+                      >
+                        {hidden ? (
+                          <EyeOff className="size-5" />
+                        ) : (
+                          <Eye className="size-5" />
+                        )}
+                      </span>
+                      <h3 className="mt-3 font-extrabold text-brand-navy">
+                        {category.name}
+                      </h3>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        {category.productCount} productos ·{" "}
+                        {category.merchantCount} comerciantes
+                      </p>
+                      <button
+                        type="button"
+                        aria-pressed={!hidden}
+                        onClick={() =>
+                          toggleDemoCategoryVisibility(
+                            category.id,
+                            category.name,
+                          )
+                        }
+                        className="mt-4 min-h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-bold text-brand-navy hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-brand-blue"
+                      >
+                        {hidden
+                          ? "Mostrar en catálogo"
+                          : "Ocultar del catálogo"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          )}
         </div>
       </main>
     </div>
@@ -595,17 +654,22 @@ function AdminDashboard({
 
 function AdminNav({
   light = false,
+  readOnly = false,
   onNavigate,
 }: {
   light?: boolean;
+  readOnly?: boolean;
   onNavigate?: () => void;
 }) {
-  const links = [
+  const links: ReadonlyArray<
+    readonly [string, typeof LayoutDashboard, string]
+  > = [
     ["#resumen", LayoutDashboard, "Resumen"],
     ["#comerciantes", Store, "Comerciantes"],
+    ["#inquilinos", UsersRound, "Inquilinos"],
     ["#actividad", ChartNoAxesCombined, "Actividad"],
-    ["#contenido", Settings2, "Contenido"],
-  ] as const;
+    ...(!readOnly ? [["#contenido", Settings2, "Contenido"] as const] : []),
+  ];
   return (
     <nav aria-label="Navegación institucional" className="mt-5 space-y-1">
       {links.map(([href, Icon, label], index) => (
@@ -634,15 +698,18 @@ function AdminNav({
 function MerchantStatusSelect({
   business,
   fullWidth = false,
+  readOnly = false,
 }: {
   business: AdminBusiness & { requestCount: number };
   fullWidth?: boolean;
+  readOnly?: boolean;
 }) {
   return (
     <label className={cn(fullWidth && "block")}>
       <span className="sr-only">Estado de {business.name}</span>
       <select
         value={business.status}
+        disabled={readOnly}
         onChange={(event) =>
           updateDemoBusinessStatus(
             business.id,
@@ -652,6 +719,7 @@ function MerchantStatusSelect({
         }
         className={cn(
           "min-h-10 rounded-xl border border-slate-300 bg-white px-3 font-bold outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/15",
+          readOnly && "cursor-not-allowed bg-slate-50 text-slate-600",
           fullWidth && "w-full",
         )}
       >

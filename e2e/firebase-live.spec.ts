@@ -18,6 +18,10 @@ const admin = {
   email: process.env.DEMO_ADMIN_EMAIL ?? "",
   password: process.env.DEMO_ADMIN_PASSWORD ?? "",
 };
+const presentation = {
+  email: process.env.PRESENTATION_EMAIL ?? "",
+  password: process.env.PRESENTATION_PASSWORD ?? "",
+};
 const firestoreBase =
   "https://firestore.googleapis.com/v1/projects/abastosdesula-demo/databases/(default)/documents";
 
@@ -300,4 +304,123 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
   await page.getByRole("button", { name: "Cerrar sesión" }).first().click();
   await expect(page).toHaveURL(/\/acceso$/);
   expect(consoleErrors).toEqual([]);
+});
+
+test("presentation access is read only and password visibility is accessible", async ({
+  page,
+  request,
+}) => {
+  test.skip(
+    !presentation.email || !presentation.password,
+    "Requires presentation account credentials.",
+  );
+  await request.delete("/api/auth/session");
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/acceso");
+
+  const password = page.getByLabel("Contraseña");
+  await expect(password).toHaveAttribute("type", "password");
+  await password.fill("Muestra-Segura-2026!");
+  await page.screenshot({
+    path: "artifacts/tenant-self-service-audit/login-password-hidden-1440.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Mostrar contraseña" }).click();
+  await expect(password).toHaveAttribute("type", "text");
+  await expect(
+    page.getByRole("button", { name: "Ocultar contraseña" }),
+  ).toBeFocused();
+  await page.screenshot({
+    path: "artifacts/tenant-self-service-audit/login-password-visible-1440.png",
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Ocultar contraseña" }).click();
+  await expect(password).toHaveAttribute("type", "password");
+
+  await page.getByLabel("Correo electrónico").fill(presentation.email);
+  await password.fill(presentation.password);
+  const tokenResponse = page.waitForResponse(
+    (response) =>
+      response.url().includes("accounts:signInWithPassword") &&
+      response.request().method() === "POST",
+  );
+  await page.getByRole("button", { name: "Iniciar sesión" }).click();
+  const tokenPayload = (await (await tokenResponse).json()) as {
+    idToken?: string;
+  };
+  expect(tokenPayload.idToken).toBeTruthy();
+  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page.getByTestId("admin-tenants")).toBeVisible();
+  await expect(page.getByText("Consulta institucional").first()).toBeVisible();
+  await expect(page.locator("#comerciantes select").first()).toBeDisabled();
+  await expect(page.getByRole("link", { name: "Contenido" })).toHaveCount(0);
+  await page.screenshot({
+    path: "artifacts/tenant-self-service-audit/admin-tenants-1440.png",
+    fullPage: true,
+  });
+
+  const token = tokenPayload.idToken as string;
+  const allowedAccount = await request.get(
+    `${firestoreBase}/tenantAccounts/business-frutas-valle`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(allowedAccount.status()).toBe(200);
+  const deniedQuote = await request.get(
+    `${firestoreBase}/quoteRequests/seed-quote-frutas-001`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(deniedQuote.status()).toBe(403);
+  const deniedWrite = await request.patch(
+    `${firestoreBase}/tenantAccounts/business-frutas-valle?updateMask.fieldPaths=accountStatus`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { fields: { accountStatus: { stringValue: "overdue" } } },
+    },
+  );
+  expect(deniedWrite.status()).toBe(403);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/acceso?clearSession=1");
+  await expect(page.getByLabel("Contraseña")).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+  await page.screenshot({
+    path: "artifacts/tenant-self-service-audit/login-390.png",
+    fullPage: true,
+  });
+});
+
+test("merchant billing access is isolated by business", async ({
+  page,
+  request,
+}) => {
+  await request.delete("/api/auth/session");
+  const merchantAToken = await login(page, merchantA);
+  await page
+    .getByRole("button", { name: "Estado de cuenta", exact: true })
+    .click();
+  await expect(page.getByTestId("tenant-account")).toBeVisible();
+  await expect(
+    page.getByText("Comercial Frutas del Valle").first(),
+  ).toBeVisible();
+  await expect(page.getByText("Verduras La Huerta")).toHaveCount(0);
+  const merchantAReadsB = await request.get(
+    `${firestoreBase}/tenantAccounts/business-la-huerta`,
+    { headers: { Authorization: `Bearer ${merchantAToken}` } },
+  );
+  expect(merchantAReadsB.status()).toBe(403);
+
+  await request.delete("/api/auth/session");
+  const merchantBToken = await login(page, merchantB);
+  await page
+    .getByRole("button", { name: "Estado de cuenta", exact: true })
+    .click();
+  await expect(page.getByText("Verduras La Huerta").first()).toBeVisible();
+  await expect(page.getByText("Comercial Frutas del Valle")).toHaveCount(0);
+  const merchantBReadsA = await request.get(
+    `${firestoreBase}/tenantAccounts/business-frutas-valle`,
+    { headers: { Authorization: `Bearer ${merchantBToken}` } },
+  );
+  expect(merchantBReadsA.status()).toBe(403);
 });

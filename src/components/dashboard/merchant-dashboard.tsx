@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   Store,
   UsersRound,
+  WalletCards,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
@@ -42,6 +43,7 @@ import {
 } from "@/components/dashboard/manual-request-dialog";
 import { RequestDetailDrawer } from "@/components/dashboard/request-detail-drawer";
 import { Brand } from "@/components/layout/brand";
+import { TenantAccountPanel } from "@/components/tenant/tenant-account-panel";
 import {
   getDemoSessionServerSnapshot,
   getDemoSessionSnapshot,
@@ -67,6 +69,11 @@ import {
 } from "@/data/adapters/browser/quote-request-store";
 import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
 import { useFirebaseQuoteRequests } from "@/data/adapters/firebase/use-quote-requests";
+import { useFirebaseTenantBilling } from "@/data/adapters/firebase/use-tenant-billing";
+import {
+  tenantAccountFixtures,
+  tenantPaymentFixtures,
+} from "@/data/tenant-billing-fixtures";
 import type {
   Customer,
   ManualQuoteRequestInput,
@@ -82,7 +89,7 @@ interface DashboardBusiness {
   productCount: number;
 }
 
-type DashboardSection = "dashboard" | "requests" | "customers";
+type DashboardSection = "dashboard" | "requests" | "customers" | "account";
 type RequestView = "list" | "pipeline";
 
 export function MerchantDashboard({
@@ -210,6 +217,10 @@ function DashboardShell({
     business.id,
     firebaseAuthenticated,
   );
+  const firebaseBilling = useFirebaseTenantBilling({
+    enabled: firebaseAuthenticated,
+    businessId: business.id,
+  });
 
   useEffect(() => {
     if (!firebaseAuthenticated) ensureDemoQuoteSeed();
@@ -233,6 +244,16 @@ function DashboardShell({
   const customers = firebaseAuthenticated
     ? firebaseCrm.customers
     : localCustomers;
+  const tenantAccount = firebaseAuthenticated
+    ? firebaseBilling.accounts[0]
+    : tenantAccountFixtures.find(
+        (account) => account.businessId === business.id,
+      );
+  const tenantPayments = firebaseAuthenticated
+    ? firebaseBilling.payments
+    : tenantPaymentFixtures.filter(
+        (payment) => payment.businessId === business.id,
+      );
   const selectedRequest = requests.find(
     (request) => request.id === selectedRequestId,
   );
@@ -447,12 +468,20 @@ function DashboardShell({
               onOpenCustomer={setSelectedCustomerId}
             />
           )}
+          {section === "account" && (
+            <TenantAccountPanel
+              account={tenantAccount}
+              payments={tenantPayments}
+              loading={firebaseBilling.loading}
+              error={firebaseBilling.error}
+            />
+          )}
         </div>
       </main>
 
       <nav
         aria-label="Navegación inferior"
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-3 border-t border-slate-200 bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
       >
         <MobileNavButton
           icon={LayoutDashboard}
@@ -471,6 +500,12 @@ function DashboardShell({
           label="Clientes"
           active={section === "customers"}
           onClick={() => setSection("customers")}
+        />
+        <MobileNavButton
+          icon={WalletCards}
+          label="Cuenta"
+          active={section === "account"}
+          onClick={() => setSection("account")}
         />
       </nav>
 
@@ -521,6 +556,7 @@ function DashboardNav({
     ["dashboard", LayoutDashboard, "Resumen"],
     ["requests", ClipboardList, "Solicitudes"],
     ["customers", UsersRound, "Clientes"],
+    ["account", WalletCards, "Estado de cuenta"],
   ] as const;
   return (
     <nav aria-label="Navegación del panel" className="mt-5 space-y-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { LockKeyhole, LogIn, TriangleAlert } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole, LogIn, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
@@ -23,6 +23,7 @@ export function LoginForm({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   useEffect(() => {
     if (!clearSession) return;
@@ -87,9 +88,7 @@ export function LoginForm({
           };
           if (!response.ok)
             throw new Error(result.error ?? "Acceso rechazado.");
-          router.replace(
-            result.role === "institutional_admin" ? "/admin" : "/panel",
-          );
+          router.replace(result.role === "merchant" ? "/panel" : "/admin");
         } catch (submissionError) {
           void submissionError;
           setError(
@@ -119,14 +118,32 @@ export function LoginForm({
       </label>
       <label className="block text-sm font-bold text-brand-navy">
         Contraseña
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          minLength={8}
-          className="mt-2 min-h-12 w-full rounded-xl border border-slate-300 px-4 font-medium outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/15"
-        />
+        <span className="relative mt-2 block">
+          <input
+            name="password"
+            type={passwordVisible ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            minLength={8}
+            className="min-h-12 w-full rounded-xl border border-slate-300 pr-14 pl-4 font-medium outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/15"
+          />
+          <button
+            type="button"
+            aria-label={
+              passwordVisible ? "Ocultar contraseña" : "Mostrar contraseña"
+            }
+            aria-pressed={passwordVisible}
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => setPasswordVisible((visible) => !visible)}
+            className="absolute inset-y-0 right-0 grid min-h-12 min-w-12 place-items-center rounded-r-xl text-slate-500 hover:bg-slate-50 hover:text-brand-navy focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-brand-blue"
+          >
+            {passwordVisible ? (
+              <EyeOff className="size-5" aria-hidden="true" />
+            ) : (
+              <Eye className="size-5" aria-hidden="true" />
+            )}
+          </button>
+        </span>
       </label>
       {error && (
         <p

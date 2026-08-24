@@ -42,7 +42,7 @@ export default async function MerchantPanelPage() {
       redirect(`/acceso?next=/panel${reason}`);
     }
     const session = sessionState.session;
-    if (session.role === "institutional_admin") redirect("/admin");
+    if (session.role !== "merchant") redirect("/admin");
     const business = businesses.find((item) => item.id === session.businessId);
     if (!business) redirect("/acceso?error=business");
     return (

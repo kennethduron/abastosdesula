@@ -11,5 +11,7 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     passWithNoTests: true,
+    pool: "threads",
+    maxWorkers: 1,
   },
 });

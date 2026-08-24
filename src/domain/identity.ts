@@ -1,6 +1,7 @@
 import type { DemoEntity, EntityId } from "@/domain/shared";
 
-export type UserRole = "merchant" | "institutional_admin";
+export type UserRole =
+  "merchant" | "institutional_admin" | "presentation_viewer";
 
 export interface User extends DemoEntity {
   email: string;

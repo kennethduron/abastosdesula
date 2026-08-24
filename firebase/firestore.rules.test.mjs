@@ -42,6 +42,10 @@ beforeEach(async () => {
         role: "institutional_admin",
         active: true,
       }),
+      setDoc(doc(db, "users", "presentation"), {
+        role: "presentation_viewer",
+        active: true,
+      }),
       setDoc(doc(db, "quoteRequests", "quote-a"), {
         businessId: "business-a",
         customerId: "customer-a",
@@ -75,6 +79,26 @@ beforeEach(async () => {
         type: "quote_request_created",
         readAt: null,
       }),
+      setDoc(doc(db, "tenantAccounts", "business-a"), {
+        businessId: "business-a",
+        businessName: "Negocio A",
+        accountStatus: "current",
+      }),
+      setDoc(doc(db, "tenantAccounts", "business-b"), {
+        businessId: "business-b",
+        businessName: "Negocio B",
+        accountStatus: "pending",
+      }),
+      setDoc(doc(db, "tenantPayments", "payment-a"), {
+        businessId: "business-a",
+        period: "Agosto 2026",
+        paidAmountMinor: 500000,
+      }),
+      setDoc(doc(db, "tenantPayments", "payment-b"), {
+        businessId: "business-b",
+        period: "Agosto 2026",
+        paidAmountMinor: 0,
+      }),
     ]);
   });
 });
@@ -90,6 +114,10 @@ function merchant(uid, businessId) {
       businessId,
     })
     .firestore();
+}
+
+function institutional(uid, role) {
+  return environment.authenticatedContext(uid, { role }).firestore();
 }
 
 describe("Firestore multitenant rules", () => {
@@ -272,6 +300,57 @@ describe("Firestore multitenant rules", () => {
     await assertFails(
       updateDoc(doc(merchantA, "notifications", "notification-a"), {
         type: "tampered",
+      }),
+    );
+  });
+
+  it("isolates every tenant account and payment between merchants", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    const merchantB = merchant("merchant-b", "business-b");
+
+    await assertSucceeds(
+      getDoc(doc(merchantA, "tenantAccounts", "business-a")),
+    );
+    await assertSucceeds(getDoc(doc(merchantA, "tenantPayments", "payment-a")));
+    await assertFails(getDoc(doc(merchantA, "tenantAccounts", "business-b")));
+    await assertFails(getDoc(doc(merchantA, "tenantPayments", "payment-b")));
+    await assertFails(getDoc(doc(merchantB, "tenantAccounts", "business-a")));
+    await assertFails(getDoc(doc(merchantB, "tenantPayments", "payment-a")));
+  });
+
+  it("allows institutional readers to consult billing without private CRM access", async () => {
+    const admin = institutional("admin", "institutional_admin");
+    const presentation = institutional("presentation", "presentation_viewer");
+
+    await assertSucceeds(getDoc(doc(admin, "tenantAccounts", "business-a")));
+    await assertSucceeds(
+      getDoc(doc(presentation, "tenantAccounts", "business-a")),
+    );
+    await assertSucceeds(
+      getDoc(doc(presentation, "tenantPayments", "payment-b")),
+    );
+    await assertFails(getDoc(doc(presentation, "quoteRequests", "quote-a")));
+    await assertFails(getDoc(doc(presentation, "customers", "customer-a")));
+  });
+
+  it("keeps presentation and administrative billing access read only", async () => {
+    const presentation = institutional("presentation", "presentation_viewer");
+    const admin = institutional("admin", "institutional_admin");
+
+    await assertFails(
+      updateDoc(doc(presentation, "tenantAccounts", "business-a"), {
+        accountStatus: "overdue",
+      }),
+    );
+    await assertFails(
+      setDoc(doc(presentation, "tenantPayments", "payment-new"), {
+        businessId: "business-a",
+        paidAmountMinor: 1,
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(admin, "tenantPayments", "payment-a"), {
+        paidAmountMinor: 1,
       }),
     );
   });
