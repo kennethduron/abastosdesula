@@ -33,11 +33,17 @@ async function login(page: Page, credentials: typeof merchantA) {
       response.url().includes("accounts:signInWithPassword") &&
       response.request().method() === "POST",
   );
+  const sessionResponse = page.waitForResponse(
+    (response) =>
+      response.url().endsWith("/api/auth/session") &&
+      response.request().method() === "POST",
+  );
   await page.getByRole("button", { name: "Iniciar sesión" }).click();
   const response = await tokenResponse;
   expect(response.ok()).toBeTruthy();
   const payload = (await response.json()) as { idToken?: string };
   expect(payload.idToken).toBeTruthy();
+  expect((await sessionResponse).ok()).toBeTruthy();
   return payload.idToken as string;
 }
 
@@ -190,12 +196,14 @@ test("Firebase persists a quote workflow and isolates another merchant", async (
     .filter({ hasText: customerNameA })
     .first()
     .click();
-  await expect(page.getByLabel("Estado de la solicitud")).toHaveValue("quoted");
-  await expect(page.getByText(internalNote)).toBeVisible();
-  await expect(page.getByText(followUpTitle)).toBeVisible();
-  await page.getByRole("tab", { name: "Cotización" }).click();
-  await expect(page.getByText(/Versión 1/)).toBeVisible();
-  await page.getByRole("button", { name: "Cerrar detalle" }).click();
+  await expect(detail.getByLabel("Estado de la solicitud")).toHaveValue(
+    "quoted",
+  );
+  await expect(detail.getByText(internalNote)).toBeVisible();
+  await expect(detail.getByText(followUpTitle)).toBeVisible();
+  await detail.getByRole("tab", { name: "Cotización" }).click();
+  await expect(detail.getByText(/Versión 1/)).toBeVisible();
+  await detail.getByRole("button", { name: "Cerrar detalle" }).click();
   await page.getByRole("button", { name: "Clientes" }).first().click();
   await page
     .getByRole("button")
