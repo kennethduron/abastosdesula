@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 
 export default function MerchantRegistrationPage() {
   return (
-    <main id="contenido-principal" className="bg-slate-50 py-12 sm:py-16">
+    <main
+      id="contenido-principal"
+      className="flex-1 bg-slate-50 py-8 sm:py-12 lg:py-16"
+    >
       <Container>
         <div className="mx-auto max-w-4xl">
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl shadow-brand-navy/5 sm:p-9">
