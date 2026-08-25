@@ -1,4 +1,5 @@
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, UserPlus } from "lucide-react";
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 
 import { Brand } from "./brand";
@@ -30,6 +31,12 @@ export function PublicHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/registro-comerciante"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-extrabold text-brand-navy hover:bg-slate-50 lg:inline-flex"
+          >
+            <UserPlus className="size-4" /> Solicitar acceso
+          </Link>
           <a
             href={siteConfig.whatsappDemoUrl}
             target="_blank"

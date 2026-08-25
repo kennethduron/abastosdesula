@@ -2,6 +2,7 @@ import type { DemoEntity, EntityId } from "@/domain/shared";
 
 export const USER_ROLES = [
   "merchant",
+  "merchant_applicant",
   "institutional_admin",
   "presentation_viewer",
 ] as const;

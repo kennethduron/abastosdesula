@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
 import { Brand } from "@/components/layout/brand";
@@ -49,6 +50,17 @@ export default async function AccessPage({
           sessionExpired={params.error === "session"}
           localFallbackAvailable={localFallbackAvailable}
         />
+        <div className="mt-7 border-t border-slate-200 pt-6 text-center">
+          <p className="text-sm font-semibold text-slate-600">
+            ¿Es comerciante de la Central?
+          </p>
+          <Link
+            href="/registro-comerciante"
+            className="button-secondary mt-3 w-full"
+          >
+            Solicitar acceso
+          </Link>
+        </div>
       </section>
     </main>
   );

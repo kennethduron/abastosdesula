@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function InstitutionalAdminPage() {
-  const businesses = demoBusinesses.map((business) => {
+  let businesses = demoBusinesses.map((business) => {
     const merchant = demoMerchants.find(
       (item) => item.businessId === business.id,
     );
@@ -63,11 +63,45 @@ export default async function InstitutionalAdminPage() {
       redirect(`/acceso?next=/admin${reason}`);
     }
     const session = sessionState.session;
+    if (session.role === "merchant_applicant") redirect("/solicitud-recibida");
     if (
       session.role !== "institutional_admin" &&
       session.role !== "presentation_viewer"
     )
       redirect("/panel");
+    const { getFirebaseAdminDb } =
+      await import("@/data/adapters/firebase/admin");
+    const db = getFirebaseAdminDb();
+    const [businessSnapshot, productSnapshot, merchantSnapshot] =
+      await Promise.all([
+        db.collection("businesses").limit(250).get(),
+        db.collection("products").limit(500).get(),
+        db.collection("merchants").limit(250).get(),
+      ]);
+    const businessById = new Map(
+      businesses.map((business) => [business.id, business]),
+    );
+    for (const document of businessSnapshot.docs) {
+      const data = document.data();
+      const merchant = merchantSnapshot.docs.find(
+        (item) => item.data().businessId === document.id,
+      );
+      businessById.set(document.id, {
+        id: document.id,
+        name: String(data.name ?? "Comercio"),
+        status:
+          data.status === "inactive" || data.status === "pending"
+            ? data.status
+            : "active",
+        productCount: productSnapshot.docs.filter(
+          (item) => item.data().businessId === document.id,
+        ).length,
+        categoryCount: Array.isArray(merchant?.data().categoryIds)
+          ? merchant.data().categoryIds.length
+          : 0,
+      });
+    }
+    businesses = [...businessById.values()];
     return (
       <InstitutionalAdmin
         businesses={businesses}

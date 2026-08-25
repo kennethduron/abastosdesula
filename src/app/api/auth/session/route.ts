@@ -21,7 +21,12 @@ const RECENT_SIGN_IN_SECONDS = 5 * 60;
 export async function GET() {
   const state = await getAppSessionState();
   if (state.status === "authenticated") {
-    return Response.json({ authenticated: true, role: state.session.role });
+    return Response.json({
+      authenticated: true,
+      role: state.session.role,
+      mustChangePassword: state.session.mustChangePassword,
+      applicationStatus: state.session.applicationStatus,
+    });
   }
   if (state.status === "invalid") {
     (await cookies()).delete(FIREBASE_SESSION_COOKIE);
@@ -110,7 +115,13 @@ export async function POST(request: Request) {
       maxAge: FIREBASE_SESSION_MAX_AGE_SECONDS,
       priority: "high",
     });
-    return Response.json({ role });
+    return Response.json({
+      role,
+      mustChangePassword:
+        role === "merchant" && decoded.mustChangePassword === true,
+      applicationStatus:
+        role === "merchant_applicant" ? user.data()?.status : undefined,
+    });
   } catch (error) {
     const diagnostic = getSanitizedServerError(error, firebaseStage);
     console.error("[firebase-auth] session creation failed", diagnostic);

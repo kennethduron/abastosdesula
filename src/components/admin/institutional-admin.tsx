@@ -19,6 +19,7 @@ import {
   Settings2,
   ShieldCheck,
   Store,
+  UserPlus,
   UsersRound,
   X,
 } from "lucide-react";
@@ -27,6 +28,7 @@ import { useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 
 import { InstitutionalTenantSection } from "@/components/admin/institutional-tenant-section";
+import { MerchantAccessSection } from "@/components/admin/merchant-access-section";
 import { Brand } from "@/components/layout/brand";
 import {
   getDemoSessionServerSnapshot,
@@ -447,6 +449,7 @@ function AdminDashboard({
                         <MerchantStatusSelect
                           business={business}
                           readOnly={readOnly}
+                          firebaseAuthenticated={firebaseAuthenticated}
                         />
                       </td>
                     </tr>
@@ -483,12 +486,18 @@ function AdminDashboard({
                       business={business}
                       fullWidth
                       readOnly={readOnly}
+                      firebaseAuthenticated={firebaseAuthenticated}
                     />
                   </div>
                 </li>
               ))}
             </ul>
           </section>
+
+          <MerchantAccessSection
+            enabled={firebaseAuthenticated}
+            readOnly={readOnly}
+          />
 
           <InstitutionalTenantSection
             accounts={tenantAccounts}
@@ -666,6 +675,7 @@ function AdminNav({
   > = [
     ["#resumen", LayoutDashboard, "Resumen"],
     ["#comerciantes", Store, "Comerciantes"],
+    ["#solicitudes-acceso", UserPlus, "Solicitudes de acceso"],
     ["#inquilinos", UsersRound, "Inquilinos"],
     ["#actividad", ChartNoAxesCombined, "Actividad"],
     ...(!readOnly ? [["#contenido", Settings2, "Contenido"] as const] : []),
@@ -699,10 +709,12 @@ function MerchantStatusSelect({
   business,
   fullWidth = false,
   readOnly = false,
+  firebaseAuthenticated = false,
 }: {
   business: AdminBusiness & { requestCount: number };
   fullWidth?: boolean;
   readOnly?: boolean;
+  firebaseAuthenticated?: boolean;
 }) {
   return (
     <label className={cn(fullWidth && "block")}>
@@ -710,13 +722,17 @@ function MerchantStatusSelect({
       <select
         value={business.status}
         disabled={readOnly}
-        onChange={(event) =>
-          updateDemoBusinessStatus(
-            business.id,
-            business.name,
-            event.target.value as BusinessStatus,
-          )
-        }
+        onChange={(event) => {
+          const status = event.target.value as BusinessStatus;
+          updateDemoBusinessStatus(business.id, business.name, status);
+          if (firebaseAuthenticated) {
+            void fetch(`/api/admin/businesses/${business.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status }),
+            });
+          }
+        }}
         className={cn(
           "min-h-10 rounded-xl border border-slate-300 bg-white px-3 font-bold outline-none focus:border-brand-blue focus:ring-3 focus:ring-brand-blue/15",
           readOnly && "cursor-not-allowed bg-slate-50 text-slate-600",

@@ -2,7 +2,10 @@
 
 import { Eye, EyeOff, LockKeyhole, LogIn, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 import { getFirebaseAuth } from "@/data/adapters/firebase/auth-client";
@@ -24,6 +27,8 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [resetPending, setResetPending] = useState(false);
+  const [resetMessage, setResetMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clearSession) return;
@@ -86,6 +91,7 @@ export function LoginForm({
               role?: string;
               error?: string;
               refreshRequired?: boolean;
+              mustChangePassword?: boolean;
             };
             return { response, result };
           };
@@ -102,7 +108,15 @@ export function LoginForm({
           const { response, result } = session;
           if (!response.ok)
             throw new Error(result.error ?? "Acceso rechazado.");
-          router.replace(result.role === "merchant" ? "/panel" : "/admin");
+          router.replace(
+            result.role === "merchant_applicant"
+              ? "/solicitud-recibida"
+              : result.mustChangePassword
+                ? "/cambiar-contrasena"
+                : result.role === "merchant"
+                  ? "/panel"
+                  : "/admin",
+          );
         } catch (submissionError) {
           void submissionError;
           setError(
@@ -180,6 +194,45 @@ export function LoginForm({
         )}
         {pending ? "Verificando…" : "Iniciar sesión"}
       </button>
+      <button
+        type="button"
+        disabled={resetPending}
+        onClick={async () => {
+          const emailInput = document.querySelector<HTMLInputElement>(
+            'input[name="email"]',
+          );
+          const email = emailInput?.value.trim();
+          if (!email) {
+            setResetMessage("Ingresa primero tu correo electrónico.");
+            emailInput?.focus();
+            return;
+          }
+          setResetPending(true);
+          try {
+            await sendPasswordResetEmail(getFirebaseAuth(), email);
+            setResetMessage(
+              "Si la cuenta existe, recibirás instrucciones de recuperación en tu correo.",
+            );
+          } catch {
+            setResetMessage(
+              "No fue posible solicitar la recuperación en este momento.",
+            );
+          } finally {
+            setResetPending(false);
+          }
+        }}
+        className="mx-auto block min-h-11 text-sm font-bold text-brand-blue hover:underline"
+      >
+        {resetPending ? "Solicitando…" : "¿Olvidó su contraseña?"}
+      </button>
+      {resetMessage && (
+        <p
+          role="status"
+          className="rounded-xl bg-blue-50 p-3 text-center text-xs font-semibold text-blue-800"
+        >
+          {resetMessage}
+        </p>
+      )}
       <p className="text-center text-xs leading-5 text-slate-500">
         Acceso exclusivo para comerciantes y personal autorizado.
       </p>
