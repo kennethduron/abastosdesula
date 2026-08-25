@@ -10,6 +10,15 @@ import { isFirebaseAdminConfigured } from "@/data/adapters/firebase/admin-config
 
 const fallbackImage = "/images/home/hero-market.webp";
 const timestamp = "2026-08-24T00:00:00.000Z";
+const demoBusinessById = new Map(
+  demoBusinesses.map((business) => [business.id, business]),
+);
+const demoMerchantById = new Map(
+  demoMerchants.map((merchant) => [merchant.id, merchant]),
+);
+const demoProductById = new Map(
+  demoProducts.map((product) => [product.id, product]),
+);
 
 function visible(data: FirebaseFirestore.DocumentData) {
   return data.status === "active" && data.published !== false;
@@ -55,10 +64,11 @@ export async function getPublicCatalog() {
       .filter((item) => visible(item.data()))
       .map((item) => {
         const data = item.data();
+        const fallback = demoBusinessById.get(item.id);
         return {
           id: item.id,
-          name: String(data.name ?? "Comercio"),
-          slug: String(data.slug ?? item.id),
+          name: String(data.name ?? fallback?.name ?? "Comercio"),
+          slug: String(data.slug ?? fallback?.slug ?? item.id),
           status: "active",
           isDemo: true,
           createdAt: timestamp,
@@ -74,26 +84,36 @@ export async function getPublicCatalog() {
       )
       .map((item) => {
         const data = item.data();
+        const fallback = demoMerchantById.get(item.id);
         return {
           id: item.id,
           businessId: String(data.businessId),
-          slug: String(data.slug ?? item.id),
-          displayName: String(data.displayName ?? "Comercio"),
+          slug: String(data.slug ?? fallback?.slug ?? item.id),
+          displayName: String(
+            data.displayName ?? fallback?.displayName ?? "Comercio",
+          ),
           description: String(
-            data.description ?? "Información comercial disponible.",
+            data.description ??
+              fallback?.description ??
+              "Información comercial disponible.",
           ),
           categoryIds: Array.isArray(data.categoryIds)
             ? data.categoryIds.map(String).slice(0, 10)
-            : [],
+            : (fallback?.categoryIds ?? []),
           featuredProductIds: Array.isArray(data.featuredProductIds)
             ? data.featuredProductIds.map(String).slice(0, 20)
-            : [],
-          image: String(data.image ?? fallbackImage),
-          imageAlt: String(data.imageAlt ?? data.displayName ?? "Comercio"),
+            : (fallback?.featuredProductIds ?? []),
+          image: String(data.image ?? fallback?.image ?? fallbackImage),
+          imageAlt: String(
+            data.imageAlt ??
+              fallback?.imageAlt ??
+              data.displayName ??
+              "Comercio",
+          ),
           whatsappDemo:
             typeof data.whatsappDemo === "string"
               ? data.whatsappDemo
-              : undefined,
+              : fallback?.whatsappDemo,
           verificationLabel: "demo",
           status: "active",
           isDemo: true,
@@ -109,33 +129,49 @@ export async function getPublicCatalog() {
       )
       .map((item) => {
         const data = item.data();
-        const stock = Number(data.stock ?? 1);
+        const fallback = demoProductById.get(item.id);
+        const stock = Number(
+          data.stock ?? (fallback?.availability === "unavailable" ? 0 : 1),
+        );
         return {
           id: item.id,
           businessId: String(data.businessId),
-          categoryId: String(data.categoryId ?? "category-groceries"),
-          name: String(data.name ?? "Producto"),
-          slug: String(data.slug ?? item.id),
-          description: String(
-            data.description ?? "Producto disponible para cotización.",
+          categoryId: String(
+            data.categoryId ?? fallback?.categoryId ?? "category-groceries",
           ),
-          image: String(data.image ?? fallbackImage),
-          imageAlt: String(data.imageAlt ?? data.name ?? "Producto"),
-          unit: String(data.unit ?? "unidad"),
+          name: String(data.name ?? fallback?.name ?? "Producto"),
+          slug: String(data.slug ?? fallback?.slug ?? item.id),
+          description: String(
+            data.description ??
+              fallback?.description ??
+              "Producto disponible para cotización.",
+          ),
+          image: String(data.image ?? fallback?.image ?? fallbackImage),
+          imageAlt: String(
+            data.imageAlt ?? fallback?.imageAlt ?? data.name ?? "Producto",
+          ),
+          unit: String(data.unit ?? fallback?.unit ?? "unidad"),
           referencePrice: {
             amountMinor: Math.max(
               0,
-              Number(data.priceMinor ?? data.referencePrice?.amountMinor ?? 0),
+              Number(
+                data.priceMinor ??
+                  data.referencePrice?.amountMinor ??
+                  fallback?.referencePrice.amountMinor ??
+                  0,
+              ),
             ),
             currency: "HNL",
           },
           availability:
             stock === 0
               ? "unavailable"
-              : data.availability === "limited"
+              : data.availability === "limited" ||
+                  (data.availability === undefined &&
+                    fallback?.availability === "limited")
                 ? "limited"
                 : "available",
-          featured: data.featured === true,
+          featured: data.featured === true || fallback?.featured === true,
           isDemo: true,
           createdAt: timestamp,
           updatedAt: timestamp,
