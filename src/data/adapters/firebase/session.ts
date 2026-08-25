@@ -14,6 +14,8 @@ export interface VerifiedAppSession {
   role: UserRole;
   businessId?: string;
   displayName: string;
+  mustChangePassword: boolean;
+  applicationStatus?: "pending" | "approved" | "rejected";
 }
 
 export type AppSessionState =
@@ -60,6 +62,13 @@ export async function getAppSessionState(): Promise<AppSessionState> {
         ? decoded.businessId
         : undefined;
     if (role === "merchant" && !businessId) return { status: "invalid" };
+    const applicationStatus =
+      role === "merchant_applicant" &&
+      (user.status === "pending" ||
+        user.status === "approved" ||
+        user.status === "rejected")
+        ? user.status
+        : undefined;
     return {
       status: "authenticated",
       session: {
@@ -68,6 +77,9 @@ export async function getAppSessionState(): Promise<AppSessionState> {
         businessId,
         displayName:
           typeof user.displayName === "string" ? user.displayName : "Usuario",
+        mustChangePassword:
+          role === "merchant" && decoded.mustChangePassword === true,
+        applicationStatus,
       },
     };
   } catch (error) {

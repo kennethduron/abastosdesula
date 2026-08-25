@@ -7,7 +7,10 @@ import {
   type MerchantDirectoryItem,
 } from "@/components/merchants/merchant-directory";
 import { Container } from "@/components/layout/container";
-import { getRepositories } from "@/data/repository-provider";
+import { getPublicCatalog } from "@/data/adapters/firebase/public-catalog";
+import { demoCategories } from "@/data/adapters/mock/demo-data";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Directorio de comerciantes | Central de Abastos de Sula",
@@ -16,17 +19,13 @@ export const metadata: Metadata = {
 };
 
 export default async function MerchantsPage() {
-  const repositories = getRepositories();
-  const [merchants, categories, productPage] = await Promise.all([
-    repositories.merchants.list({ status: "active" }),
-    repositories.categories.list(),
-    repositories.products.list({ page: 1, pageSize: 48 }),
-  ]);
+  const { merchants, products } = await getPublicCatalog();
+  const categories = demoCategories;
   const categoryById = new Map(
     categories.map((category) => [category.id, category.name]),
   );
   const productById = new Map(
-    productPage.items.map((product) => [product.id, product.name]),
+    products.map((product) => [product.id, product.name]),
   );
   const directoryMerchants: MerchantDirectoryItem[] = merchants.map(
     (merchant) => ({

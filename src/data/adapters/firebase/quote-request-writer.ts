@@ -14,24 +14,61 @@ export async function createFirebaseQuoteRequest(
   rawInput: PublicQuoteRequestInput,
 ) {
   const input = publicQuoteRequestSchema.parse(rawInput);
-  const business = demoBusinesses.find(({ id }) => id === input.businessId);
-  if (!business) throw new Error("Comerciante no encontrado.");
-  const items = input.items.map((item) => {
-    const product = demoProducts.find(({ id }) => id === item.productId);
-    if (!product || product.businessId !== input.businessId) {
-      throw new Error("Todos los productos deben pertenecer al comerciante.");
-    }
-    return {
-      productId: product.id,
-      productName: product.name,
-      quantity: item.quantity,
-      unit: item.unit,
-      image: product.image,
-      imageAlt: product.imageAlt,
-      referencePriceMinor: product.referencePrice.amountMinor,
-    };
-  });
   const db = getFirebaseAdminDb();
+  const demoBusiness = demoBusinesses.find(({ id }) => id === input.businessId);
+  const businessSnapshot = demoBusiness
+    ? null
+    : await db.collection("businesses").doc(input.businessId).get();
+  const businessData = businessSnapshot?.data();
+  if (
+    !demoBusiness &&
+    (!businessSnapshot?.exists ||
+      businessData?.status !== "active" ||
+      businessData?.published === false)
+  ) {
+    throw new Error("Comerciante no encontrado.");
+  }
+  const items = await Promise.all(
+    input.items.map(async (item) => {
+      const demoProduct = demoProducts.find(({ id }) => id === item.productId);
+      const productSnapshot = demoProduct
+        ? null
+        : await db.collection("products").doc(item.productId).get();
+      const productData = productSnapshot?.data();
+      const businessId = demoProduct?.businessId ?? productData?.businessId;
+      const productVisible =
+        Boolean(demoProduct) ||
+        (productSnapshot?.exists &&
+          productData?.status === "active" &&
+          productData?.published !== false);
+      if (!productVisible || businessId !== input.businessId) {
+        throw new Error("Todos los productos deben pertenecer al comerciante.");
+      }
+      return {
+        productId: demoProduct?.id ?? item.productId,
+        productName:
+          demoProduct?.name ?? String(productData?.name ?? "Producto"),
+        quantity: item.quantity,
+        unit: demoProduct?.unit ?? String(productData?.unit ?? item.unit),
+        image:
+          demoProduct?.image ??
+          String(productData?.image ?? "/images/home/hero-market.webp"),
+        imageAlt:
+          demoProduct?.imageAlt ??
+          String(productData?.imageAlt ?? productData?.name ?? "Producto"),
+        referencePriceMinor:
+          demoProduct?.referencePrice.amountMinor ??
+          Math.max(
+            0,
+            Number(
+              productData?.priceMinor ??
+                productData?.referencePrice?.amountMinor ??
+                0,
+            ),
+          ),
+      };
+    }),
+  );
   const quoteRef = db.collection("quoteRequests").doc();
   const customerRef = db.collection("customers").doc();
   const activityRef = db.collection("activities").doc();
@@ -111,6 +148,7 @@ export async function createFirebaseQuoteRequest(
   return {
     id: quoteRef.id,
     status: "new" as const,
-    businessName: business.name,
+    businessName:
+      demoBusiness?.name ?? String(businessData?.name ?? "Comercio"),
   };
 }

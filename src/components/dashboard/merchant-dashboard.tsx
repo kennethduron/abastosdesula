@@ -2,17 +2,20 @@
 
 import {
   Bell,
+  Boxes,
   CalendarClock,
   ChevronRight,
   CircleDollarSign,
   CircleUserRound,
   ClipboardList,
   Columns3,
+  FileText,
   LayoutDashboard,
   List,
   LogOut,
   Menu,
   MessageCircleMore,
+  PackageSearch,
   Plus,
   Search,
   ShoppingBag,
@@ -37,6 +40,13 @@ import {
   statusStyles,
 } from "@/components/dashboard/crm-utils";
 import { CustomerDetailDrawer } from "@/components/dashboard/customer-detail-drawer";
+import {
+  MerchantBusinessWorkspace,
+  MerchantDocumentsWorkspace,
+  MerchantInventoryWorkspace,
+  MerchantOperationsSummary,
+  MerchantProductsWorkspace,
+} from "@/components/dashboard/merchant-self-service-workspaces";
 import {
   ManualRequestDialog,
   type DashboardProduct,
@@ -89,7 +99,15 @@ interface DashboardBusiness {
   productCount: number;
 }
 
-type DashboardSection = "dashboard" | "requests" | "customers" | "account";
+type DashboardSection =
+  | "dashboard"
+  | "business"
+  | "products"
+  | "inventory"
+  | "requests"
+  | "customers"
+  | "documents"
+  | "account";
 type RequestView = "list" | "pipeline";
 
 export function MerchantDashboard({
@@ -451,6 +469,25 @@ function DashboardShell({
               business={business}
               onOpenRequest={setSelectedRequestId}
               onNavigate={setSection}
+              firebaseAuthenticated={firebaseAuthenticated}
+            />
+          )}
+          {section === "business" && (
+            <MerchantBusinessWorkspace
+              businessId={business.id}
+              enabled={firebaseAuthenticated}
+            />
+          )}
+          {section === "products" && (
+            <MerchantProductsWorkspace
+              businessId={business.id}
+              enabled={firebaseAuthenticated}
+            />
+          )}
+          {section === "inventory" && (
+            <MerchantInventoryWorkspace
+              businessId={business.id}
+              enabled={firebaseAuthenticated}
             />
           )}
           {section === "requests" && (
@@ -476,13 +513,20 @@ function DashboardShell({
               error={firebaseBilling.error}
             />
           )}
+          {section === "documents" && <MerchantDocumentsWorkspace />}
         </div>
       </main>
 
       <nav
         aria-label="Navegación inferior"
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-slate-200 bg-white px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-slate-200 bg-white px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden"
       >
+        <MobileNavButton
+          icon={PackageSearch}
+          label="Productos"
+          active={section === "products"}
+          onClick={() => setSection("products")}
+        />
         <MobileNavButton
           icon={LayoutDashboard}
           label="Resumen"
@@ -554,8 +598,12 @@ function DashboardNav({
 }) {
   const links = [
     ["dashboard", LayoutDashboard, "Resumen"],
+    ["business", Store, "Mi negocio"],
+    ["products", PackageSearch, "Productos"],
+    ["inventory", Boxes, "Inventario"],
     ["requests", ClipboardList, "Solicitudes"],
     ["customers", UsersRound, "Clientes"],
+    ["documents", FileText, "Documentos"],
     ["account", WalletCards, "Estado de cuenta"],
   ] as const;
   return (
@@ -589,12 +637,14 @@ function DashboardOverview({
   business,
   onOpenRequest,
   onNavigate,
+  firebaseAuthenticated,
 }: {
   requests: QuoteRequest[];
   customers: Customer[];
   business: DashboardBusiness;
   onOpenRequest: (id: string) => void;
   onNavigate: (section: DashboardSection) => void;
+  firebaseAuthenticated: boolean;
 }) {
   const counts = Object.fromEntries(
     statusOptions.map((option) => [
@@ -616,6 +666,7 @@ function DashboardOverview({
   const recent = [...requests]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 5);
+
   const activity = requests
     .flatMap((request) =>
       (request.activity ?? []).map((item) => ({ ...item, request })),
@@ -637,6 +688,10 @@ function DashboardOverview({
             Ver CRM <ChevronRight className="size-4" />
           </button>
         }
+      />
+      <MerchantOperationsSummary
+        businessId={business.id}
+        enabled={firebaseAuthenticated}
       />
       <section
         aria-label="Métricas del negocio"

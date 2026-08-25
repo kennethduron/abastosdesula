@@ -146,7 +146,11 @@ export function MerchantCatalog({
                     className="object-cover transition-transform duration-500 group-hover:scale-[1.025]"
                   />
                   <span className="absolute top-3 left-3 rounded-full bg-white/92 px-2.5 py-1 text-[0.65rem] font-extrabold text-brand-green shadow-sm">
-                    Disponible
+                    {product.availability === "unavailable"
+                      ? "Agotado"
+                      : product.availability === "limited"
+                        ? "Stock bajo"
+                        : "Disponible"}
                   </span>
                 </div>
                 <div className="p-4">
@@ -163,6 +167,7 @@ export function MerchantCatalog({
                     <div className="inline-flex shrink-0 items-center rounded-xl border border-slate-200">
                       <button
                         type="button"
+                        disabled={product.availability === "unavailable"}
                         aria-label={`Reducir cantidad de ${product.name}`}
                         onClick={() => setQuantity(product.id, quantity - 1)}
                         className="grid size-11 place-items-center text-slate-500 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-blue"
@@ -174,6 +179,7 @@ export function MerchantCatalog({
                       </span>
                       <button
                         type="button"
+                        disabled={product.availability === "unavailable"}
                         aria-label={`Aumentar cantidad de ${product.name}`}
                         onClick={() => setQuantity(product.id, quantity + 1)}
                         className="grid size-11 place-items-center text-brand-green hover:bg-brand-green-pale focus-visible:outline-2 focus-visible:outline-brand-blue"
@@ -183,6 +189,7 @@ export function MerchantCatalog({
                     </div>
                     <button
                       type="button"
+                      disabled={product.availability === "unavailable"}
                       onClick={() =>
                         addItem({
                           productId: product.id,
@@ -197,7 +204,7 @@ export function MerchantCatalog({
                           quantity,
                         })
                       }
-                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-green px-3 text-xs font-extrabold text-white hover:bg-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue"
+                      className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-green px-3 text-xs font-extrabold text-white hover:bg-brand-green-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-blue disabled:cursor-not-allowed disabled:bg-slate-300"
                     >
                       <ShoppingCart className="size-4" aria-hidden="true" />
                       Agregar

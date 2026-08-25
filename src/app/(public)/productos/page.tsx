@@ -4,11 +4,10 @@ import Link from "next/link";
 
 import { Container } from "@/components/layout/container";
 import { MarketplaceSearch } from "@/components/forms/marketplace-search";
-import {
-  demoBusinesses,
-  demoCategories,
-  demoProducts,
-} from "@/data/adapters/mock/demo-data";
+import { demoCategories } from "@/data/adapters/mock/demo-data";
+import { getPublicCatalog } from "@/data/adapters/firebase/public-catalog";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Productos | Central de Abastos de Sula",
@@ -21,14 +20,13 @@ export default async function ProductsPage({
   searchParams: Promise<{ categoria?: string; q?: string }>;
 }) {
   const params = await searchParams;
+  const { businesses, products: publicProducts } = await getPublicCatalog();
   const query = params.q?.trim().toLocaleLowerCase("es-HN") ?? "";
   const category = demoCategories.find(
     (item) => item.slug === params.categoria,
   );
-  const products = demoProducts.filter((product) => {
-    const business = demoBusinesses.find(
-      (item) => item.id === product.businessId,
-    );
+  const products = publicProducts.filter((product) => {
+    const business = businesses.find((item) => item.id === product.businessId);
     const matchesCategory = !category || product.categoryId === category.id;
     const matchesQuery =
       !query ||
@@ -72,7 +70,7 @@ export default async function ProductsPage({
         {products.length ? (
           <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => {
-              const business = demoBusinesses.find(
+              const business = businesses.find(
                 (item) => item.id === product.businessId,
               );
               return (

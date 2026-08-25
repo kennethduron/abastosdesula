@@ -4,11 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Container } from "@/components/layout/container";
-import {
-  demoBusinesses,
-  demoCategories,
-  demoProducts,
-} from "@/data/adapters/mock/demo-data";
+import { demoCategories, demoProducts } from "@/data/adapters/mock/demo-data";
+import { getPublicCatalog } from "@/data/adapters/firebase/public-catalog";
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return demoProducts.map((product) => ({ slug: product.slug }));
@@ -20,7 +19,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = demoProducts.find((item) => item.slug === slug);
+  const product = (await getPublicCatalog()).products.find(
+    (item) => item.slug === slug,
+  );
   return product
     ? { title: `${product.name} | Central de Abastos de Sula` }
     : { title: "Producto no encontrado" };
@@ -32,10 +33,14 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = demoProducts.find((item) => item.slug === slug);
+  const catalog = await getPublicCatalog();
+  const product = catalog.products.find((item) => item.slug === slug);
   if (!product) notFound();
-  const business = demoBusinesses.find(
+  const business = catalog.businesses.find(
     (item) => item.id === product.businessId,
+  );
+  const merchant = catalog.merchants.find(
+    (item) => item.businessId === product.businessId,
   );
   const category = demoCategories.find(
     (item) => item.id === product.categoryId,
@@ -60,7 +65,9 @@ export default async function ProductPage({
           </div>
           <div className="self-center">
             <span className="rounded-full bg-brand-green-pale px-3 py-1 text-xs font-extrabold text-brand-green uppercase">
-              Producto disponible
+              {product.availability === "unavailable"
+                ? "Agotado"
+                : "Producto disponible"}
             </span>
             <h1 className="mt-5 text-4xl font-black tracking-tight text-brand-navy">
               {product.name}
@@ -75,9 +82,9 @@ export default async function ProductPage({
             <p className="mt-3 text-sm text-slate-500">
               Categoría: {category?.name ?? "General"}
             </p>
-            {business && (
+            {business && merchant && (
               <Link
-                href={`/comerciantes/${business.slug}`}
+                href={`/comerciantes/${merchant.slug}`}
                 className="button-primary mt-7"
               >
                 Ver comerciante y cotizar

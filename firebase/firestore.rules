@@ -30,6 +30,15 @@ service cloud.firestore {
       return isActiveUser() && request.auth.token.role == 'presentation_viewer';
     }
 
+    function isMerchantApplicant() {
+      return isActiveUser() && request.auth.token.role == 'merchant_applicant';
+    }
+
+    function isPublicDocument() {
+      return resource.data.status == 'active' &&
+        (!('published' in resource.data) || resource.data.published == true);
+    }
+
     function isInstitutionalReader() {
       return isInstitutionalAdmin() || isPresentationViewer();
     }
@@ -75,19 +84,30 @@ service cloud.firestore {
     }
 
     match /businesses/{businessId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(businessId);
+      allow read: if isPublicDocument() || isInstitutionalReader() || ownsBusiness(businessId);
       allow create, delete: if isInstitutionalAdmin();
       allow update: if isInstitutionalAdmin() ||
         (ownsBusiness(businessId) && request.resource.data.id == resource.data.id &&
-          request.resource.data.status == resource.data.status);
+          request.resource.data.status == resource.data.status &&
+          request.resource.data.slug == resource.data.slug &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'name', 'description', 'categoryId', 'categoryIds', 'phone',
+            'whatsapp', 'hours', 'stall', 'logo', 'coverImage', 'published',
+            'updatedAt'
+          ]));
     }
 
     match /merchants/{merchantId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
+      allow read: if isPublicDocument() || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
       allow create: if isInstitutionalAdmin();
       allow update: if isInstitutionalAdmin() ||
         (ownsBusiness(resource.data.businessId) &&
-          request.resource.data.businessId == resource.data.businessId);
+          request.resource.data.businessId == resource.data.businessId &&
+          request.resource.data.slug == resource.data.slug &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+            'displayName', 'description', 'categoryIds', 'featuredProductIds',
+            'image', 'imageAlt', 'whatsappDemo', 'published', 'updatedAt'
+          ]));
       allow delete: if isInstitutionalAdmin();
     }
 
@@ -97,11 +117,41 @@ service cloud.firestore {
     }
 
     match /products/{productId} {
-      allow read: if resource.data.status == 'active' || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
-      allow create: if ownsBusiness(request.resource.data.businessId);
+      allow read: if isPublicDocument() || isInstitutionalReader() || ownsBusiness(resource.data.businessId);
+      allow create: if ownsBusiness(request.resource.data.businessId) &&
+        request.resource.data.id == productId &&
+        request.resource.data.stock is int && request.resource.data.stock >= 0 &&
+        request.resource.data.minimumStock is int && request.resource.data.minimumStock >= 0 &&
+        request.resource.data.status in ['active', 'inactive'];
       allow update: if ownsBusiness(resource.data.businessId) &&
-        request.resource.data.businessId == resource.data.businessId;
+        request.resource.data.businessId == resource.data.businessId &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.stock is int && request.resource.data.stock >= 0 &&
+        request.resource.data.minimumStock is int && request.resource.data.minimumStock >= 0 &&
+        request.resource.data.status in ['active', 'inactive'];
       allow delete: if ownsBusiness(resource.data.businessId);
+    }
+
+    match /inventoryMovements/{movementId} {
+      allow read: if isInstitutionalReader() || ownsBusiness(resource.data.businessId);
+      allow create: if ownsBusiness(request.resource.data.businessId) &&
+        request.resource.data.id == movementId &&
+        request.resource.data.productId is string &&
+        request.resource.data.type in ['entry', 'exit', 'adjustment'] &&
+        request.resource.data.quantity is int && request.resource.data.quantity >= 0 &&
+        request.resource.data.previousStock is int && request.resource.data.previousStock >= 0 &&
+        request.resource.data.newStock is int && request.resource.data.newStock >= 0 &&
+        request.resource.data.createdBy == request.auth.uid &&
+        get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.businessId == request.resource.data.businessId &&
+        get(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.stock == request.resource.data.previousStock &&
+        getAfter(/databases/$(database)/documents/products/$(request.resource.data.productId)).data.stock == request.resource.data.newStock;
+      allow update, delete: if false;
+    }
+
+    match /merchantApplications/{applicationId} {
+      allow read: if isInstitutionalReader() ||
+        (isMerchantApplicant() && resource.data.userId == request.auth.uid);
+      allow write: if false;
     }
 
     match /quoteRequests/{quoteId} {

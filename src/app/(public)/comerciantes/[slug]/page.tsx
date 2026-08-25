@@ -13,22 +13,26 @@ import { notFound } from "next/navigation";
 
 import { Container } from "@/components/layout/container";
 import { MerchantCatalog } from "@/components/merchants/merchant-catalog";
-import { getRepositories } from "@/data/repository-provider";
+import { getPublicCatalog } from "@/data/adapters/firebase/public-catalog";
+import { demoCategories, demoMerchants } from "@/data/adapters/mock/demo-data";
+
+export const dynamic = "force-dynamic";
 
 interface MerchantProfilePageProps {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
-  const merchants = await getRepositories().merchants.list();
-  return merchants.map(({ slug }) => ({ slug }));
+  return demoMerchants.map(({ slug }) => ({ slug }));
 }
 
 export async function generateMetadata({
   params,
 }: MerchantProfilePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const merchant = await getRepositories().merchants.getBySlug(slug);
+  const merchant = (await getPublicCatalog()).merchants.find(
+    (item) => item.slug === slug,
+  );
   if (!merchant) return { title: "Comerciante no encontrado" };
   return {
     title: `${merchant.displayName} | Central de Abastos de Sula`,
@@ -40,18 +44,14 @@ export default async function MerchantProfilePage({
   params,
 }: MerchantProfilePageProps) {
   const { slug } = await params;
-  const repositories = getRepositories();
-  const merchant = await repositories.merchants.getBySlug(slug);
+  const catalog = await getPublicCatalog();
+  const merchant = catalog.merchants.find((item) => item.slug === slug);
   if (!merchant) notFound();
 
-  const [categories, productPage] = await Promise.all([
-    repositories.categories.list(),
-    repositories.products.list({
-      businessId: merchant.businessId,
-      page: 1,
-      pageSize: 12,
-    }),
-  ]);
+  const categories = demoCategories;
+  const products = catalog.products.filter(
+    (product) => product.businessId === merchant.businessId,
+  );
   const merchantCategories = categories.filter((category) =>
     merchant.categoryIds.includes(category.id),
   );
@@ -155,7 +155,7 @@ export default async function MerchantProfilePage({
           businessName={merchant.displayName}
           whatsappDemo={merchant.whatsappDemo ?? "50400000000"}
           categories={merchantCategories.map(({ id, name }) => ({ id, name }))}
-          products={productPage.items.map((product) => ({
+          products={products.map((product) => ({
             id: product.id,
             categoryId: product.categoryId,
             name: product.name,

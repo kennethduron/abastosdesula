@@ -42,12 +42,35 @@ export default async function MerchantPanelPage() {
       redirect(`/acceso?next=/panel${reason}`);
     }
     const session = sessionState.session;
+    if (session.role === "merchant_applicant") redirect("/solicitud-recibida");
     if (session.role !== "merchant") redirect("/admin");
-    const business = businesses.find((item) => item.id === session.businessId);
+    if (session.mustChangePassword) redirect("/cambiar-contrasena");
+    let business = businesses.find((item) => item.id === session.businessId);
+    if (!business && session.businessId) {
+      const { getFirebaseAdminDb } =
+        await import("@/data/adapters/firebase/admin");
+      const snapshot = await getFirebaseAdminDb()
+        .collection("businesses")
+        .doc(session.businessId)
+        .get();
+      const data = snapshot.data();
+      if (snapshot.exists && data?.status === "active") {
+        business = {
+          id: snapshot.id,
+          name: String(data.name ?? "Mi negocio"),
+          productCount: 0,
+        };
+      }
+    }
     if (!business) redirect("/acceso?error=business");
+    const dashboardBusinesses = businesses.some(
+      (item) => item.id === business.id,
+    )
+      ? businesses
+      : [...businesses, business];
     return (
       <MerchantDashboard
-        businesses={businesses}
+        businesses={dashboardBusinesses}
         products={demoProducts.map((product) => ({
           id: product.id,
           businessId: product.businessId,
