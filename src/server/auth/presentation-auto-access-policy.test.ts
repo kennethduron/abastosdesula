@@ -67,6 +67,18 @@ describe("presentation auto access policy", () => {
     ).toEqual({ action: "refresh", role: "merchant" });
   });
 
+  it("never converts a public merchant applicant into a presentation viewer", () => {
+    expect(
+      decidePresentationAutoAccess({
+        enabled: true,
+        authDisabled: false,
+        authRole: "merchant_applicant",
+        profileActive: true,
+        profileRole: "merchant_applicant",
+      }),
+    ).toEqual({ action: "refresh", role: "merchant_applicant" });
+  });
+
   it("denies unrecognized roles when the server flag is off", () => {
     expect(
       decidePresentationAutoAccess({

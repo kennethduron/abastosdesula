@@ -1,5 +1,24 @@
 # Progreso de la demo
 
+## Portal de autogestión del comerciante
+
+La rama `feat/merchant-self-service` incorpora registro público con aprobación,
+creación de acceso por la Central, contraseña temporal obligatoria, recuperación
+de acceso, Mi negocio, productos, publicación real al catálogo, inventario
+transaccional, métricas operativas y preparación de documentos comerciales.
+
+El rol `merchant_applicant` evita que el registro público reciba acceso de
+presentación o privilegios antes de la aprobación. Las Rules incluyen pruebas
+negativas entre aspirante, Merchant A, Merchant B, visor y administración.
+
+El catálogo público usa una proyección Firebase aditiva que conserva los datos
+existentes. Una solicitud generada con un producto nuevo se valida contra el
+documento publicado y entra al mismo CRM, sin descontar inventario.
+
+Firebase Storage queda detrás de un adaptador y reglas preparadas. Su activación
+espera verificación explícita del bucket y facturación; no se habilitaron
+servicios pagos. Pagos en línea y facturación fiscal siguen fuera del alcance.
+
 ## Estado de producción
 
 La demo está operativa en `https://abastosdesula.vercel.app` sobre el proyecto

@@ -6,7 +6,13 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  runTransaction,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
 
 const projectId = "demo-abastosdesula";
 const [host = "127.0.0.1", portText = "8080"] = (
@@ -50,6 +56,16 @@ beforeEach(async () => {
         role: "merchant",
         active: true,
       }),
+      setDoc(doc(db, "users", "applicant"), {
+        role: "merchant_applicant",
+        active: true,
+        status: "pending",
+      }),
+      setDoc(doc(db, "merchantApplications", "application-a"), {
+        userId: "applicant",
+        status: "pending",
+        businessName: "Negocio aspirante",
+      }),
       setDoc(doc(db, "quoteRequests", "quote-a"), {
         businessId: "business-a",
         customerId: "customer-a",
@@ -65,14 +81,20 @@ beforeEach(async () => {
         name: "Cliente A",
       }),
       setDoc(doc(db, "products", "product-a"), {
+        id: "product-a",
         businessId: "business-a",
         status: "active",
         name: "Producto A",
+        stock: 10,
+        minimumStock: 2,
       }),
       setDoc(doc(db, "products", "product-private-a"), {
+        id: "product-private-a",
         businessId: "business-a",
         status: "inactive",
         name: "Producto privado A",
+        stock: 1,
+        minimumStock: 1,
       }),
       setDoc(doc(db, "activities", "activity-a"), {
         businessId: "business-a",
@@ -124,7 +146,89 @@ function institutional(uid, role) {
   return environment.authenticatedContext(uid, { role }).firestore();
 }
 
+function applicant(uid = "applicant") {
+  return environment
+    .authenticatedContext(uid, { role: "merchant_applicant" })
+    .firestore();
+}
+
 describe("Firestore multitenant rules", () => {
+  it("keeps applicants outside admin, CRM, products and other applications", async () => {
+    const db = applicant();
+    await assertSucceeds(
+      getDoc(doc(db, "merchantApplications", "application-a")),
+    );
+    await assertFails(getDoc(doc(db, "quoteRequests", "quote-a")));
+    await assertFails(getDoc(doc(db, "customers", "customer-a")));
+    await assertFails(getDoc(doc(db, "products", "product-private-a")));
+    await assertFails(
+      updateDoc(doc(db, "merchantApplications", "application-a"), {
+        status: "approved",
+      }),
+    );
+  });
+
+  it("allows product management only inside the merchant business", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    const product = {
+      id: "product-new-a",
+      businessId: "business-a",
+      status: "active",
+      name: "Producto nuevo",
+      stock: 3,
+      minimumStock: 1,
+      published: false,
+    };
+    await assertSucceeds(
+      setDoc(doc(merchantA, "products", product.id), product),
+    );
+    await assertFails(
+      setDoc(doc(merchantA, "products", "product-new-b"), {
+        ...product,
+        id: "product-new-b",
+        businessId: "business-b",
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(merchantA, "products", product.id), { published: true }),
+    );
+  });
+
+  it("records an atomic inventory movement without allowing negative or foreign stock", async () => {
+    const merchantA = merchant("merchant-a", "business-a");
+    await assertSucceeds(
+      runTransaction(merchantA, async (transaction) => {
+        const productReference = doc(merchantA, "products", "product-a");
+        const product = await transaction.get(productReference);
+        transaction.update(productReference, { stock: 7 });
+        transaction.set(doc(merchantA, "inventoryMovements", "movement-a"), {
+          id: "movement-a",
+          businessId: "business-a",
+          productId: "product-a",
+          type: "exit",
+          quantity: 3,
+          previousStock: product.data().stock,
+          newStock: 7,
+          reason: "Salida confirmada",
+          createdBy: "merchant-a",
+        });
+      }),
+    );
+    const merchantB = merchant("merchant-b", "business-b");
+    await assertFails(
+      setDoc(doc(merchantB, "inventoryMovements", "movement-b"), {
+        id: "movement-b",
+        businessId: "business-a",
+        productId: "product-a",
+        type: "adjustment",
+        quantity: 1,
+        previousStock: 7,
+        newStock: 1,
+        reason: "Manipulación",
+        createdBy: "merchant-b",
+      }),
+    );
+  });
   it("rejects anonymous access to private quote requests", async () => {
     const db = environment.unauthenticatedContext().firestore();
     await assertFails(getDoc(doc(db, "quoteRequests", "quote-a")));
