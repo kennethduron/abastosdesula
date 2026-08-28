@@ -1,5 +1,6 @@
 export * from "@/domain/business";
 export * from "@/domain/catalog";
+export * from "@/domain/commercial-spaces";
 export * from "@/domain/customers";
 export * from "@/domain/engagement";
 export * from "@/domain/identity";

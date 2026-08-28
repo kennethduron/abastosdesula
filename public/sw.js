@@ -1,7 +1,7 @@
 /* global self, caches, fetch */
 
 const CACHE_PREFIX = "abastos-public";
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const SHELL_CACHE = `${CACHE_PREFIX}-shell-${CACHE_VERSION}`;
 const ASSET_CACHE = `${CACHE_PREFIX}-assets-${CACHE_VERSION}`;
 const PUBLIC_SHELL = [
@@ -28,7 +28,11 @@ function isPrivatePath(pathname) {
 }
 
 function isPublicNavigation(pathname) {
-  return pathname === "/" || pathname.startsWith("/comerciantes");
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/comerciantes") ||
+    pathname.startsWith("/locales")
+  );
 }
 
 function canCache(response) {

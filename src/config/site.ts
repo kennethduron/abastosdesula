@@ -10,6 +10,7 @@ export const publicNavigation = [
   { label: "Inicio", href: "/" },
   { label: "Comerciantes", href: "/comerciantes" },
   { label: "Productos", href: "/productos" },
+  { label: "Locales", href: "/locales" },
   { label: "Promociones", href: "/promociones" },
   { label: "Noticias", href: "/noticias" },
   { label: "Contacto", href: "/contacto" },

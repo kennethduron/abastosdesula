@@ -17,6 +17,7 @@ import { BenefitCard } from "@/components/marketplace/benefit-card";
 import { CategoryCard } from "@/components/marketplace/category-card";
 import { MerchantCard } from "@/components/marketplace/merchant-card";
 import { ProductCard } from "@/components/marketplace/product-card";
+import { CommercialSpaceCard } from "@/components/spaces/commercial-space-card";
 import { Reveal } from "@/components/motion/reveal";
 import { RevealGroup } from "@/components/motion/reveal-group";
 import { siteConfig } from "@/config/site";
@@ -28,8 +29,12 @@ import {
   homeBenefits,
   homeCategories,
 } from "@/data/home-data";
+import { getPublicCommercialSpaces } from "@/data/public-commercial-spaces";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const featuredSpaces = (await getPublicCommercialSpaces())
+    .filter((space) => space.featured)
+    .slice(0, 3);
   return (
     <main id="contenido-principal" className="min-w-0 flex-1 overflow-clip">
       <section
@@ -207,6 +212,46 @@ export default function HomePage() {
               <ProductCard key={product.name} product={product} />
             ))}
           </RevealGroup>
+        </Container>
+      </section>
+
+      <section
+        data-testid="spaces-section"
+        className="relative overflow-hidden bg-brand-navy py-16 text-white sm:py-20 lg:py-24"
+      >
+        <div className="absolute -top-36 right-0 size-96 rounded-full bg-brand-green/15 blur-3xl" />
+        <Container className="relative">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <Reveal variant="fade-left">
+              <SectionHeading
+                eyebrow="Oportunidades comerciales"
+                title="Locales disponibles"
+                description="Encuentra espacios dentro de Central de Abastos de Sula y solicita información directamente con nuestra administración."
+                inverse
+              />
+            </Reveal>
+            <Reveal delay={80}>
+              <Link
+                href="/locales"
+                prefetch={false}
+                className="button-light shrink-0"
+              >
+                Ver locales <ArrowRight className="size-4" />
+              </Link>
+            </Reveal>
+          </div>
+          <RevealGroup
+            className="mt-9 grid gap-6 md:grid-cols-2 xl:grid-cols-3"
+            variant="scale-soft"
+          >
+            {featuredSpaces.map((space) => (
+              <CommercialSpaceCard key={space.id} space={space} />
+            ))}
+          </RevealGroup>
+          <p className="mt-6 text-xs leading-5 text-slate-300">
+            Disponibilidad, características y condiciones sujetas a confirmación
+            por la administración.
+          </p>
         </Container>
       </section>
 
