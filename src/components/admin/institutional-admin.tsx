@@ -674,6 +674,7 @@ function AdminNav({
     readonly [string, typeof LayoutDashboard, string]
   > = [
     ["#resumen", LayoutDashboard, "Resumen"],
+    ["/admin/locales", Building2, "Solicitudes de locales"],
     ["#comerciantes", Store, "Comerciantes"],
     ["#solicitudes-acceso", UserPlus, "Solicitudes de acceso"],
     ["#inquilinos", UsersRound, "Inquilinos"],

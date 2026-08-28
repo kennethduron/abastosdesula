@@ -154,6 +154,27 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /commercialSpaces/{spaceId} {
+      allow read: if resource.data.published == true || isInstitutionalReader();
+      allow create, update, delete: if isInstitutionalAdmin();
+    }
+
+    match /leasingInquiries/{inquiryId} {
+      allow read, create, update, delete: if isInstitutionalAdmin();
+    }
+
+    match /leasingActivities/{activityId} {
+      allow read: if isInstitutionalAdmin();
+      allow create, update, delete: if false;
+    }
+
+    match /institutionalNotifications/{notificationId} {
+      allow read: if isInstitutionalAdmin();
+      allow create, delete: if false;
+      allow update: if isInstitutionalAdmin() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readAt']);
+    }
+
     match /quoteRequests/{quoteId} {
       allow read: if ownsBusiness(resource.data.businessId);
       allow create: if validMerchantQuoteCreate(quoteId);
