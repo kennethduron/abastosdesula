@@ -134,10 +134,13 @@ test("captures commercial-space audit screenshots", async ({ page }) => {
     path: "artifacts/commercial-spaces-audit/admin-leasing-1440.png",
     fullPage: true,
   });
-  await page.screenshot({
-    path: "artifacts/commercial-spaces-audit/admin-leasing-detail-1440.png",
-    fullPage: true,
-  });
+  await page
+    .getByRole("heading", { name: "Detalle de solicitud" })
+    .locator("..")
+    .locator("..")
+    .screenshot({
+      path: "artifacts/commercial-spaces-audit/admin-leasing-detail-1440.png",
+    });
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/locales");
