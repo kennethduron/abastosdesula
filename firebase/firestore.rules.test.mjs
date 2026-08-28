@@ -125,6 +125,33 @@ beforeEach(async () => {
         period: "Agosto 2026",
         paidAmountMinor: 0,
       }),
+      setDoc(doc(db, "commercialSpaces", "space-public"), {
+        id: "space-public",
+        title: "Local comercial",
+        published: true,
+      }),
+      setDoc(doc(db, "commercialSpaces", "space-hidden"), {
+        id: "space-hidden",
+        title: "Local oculto",
+        published: false,
+      }),
+      setDoc(doc(db, "leasingInquiries", "leasing-a"), {
+        id: "leasing-a",
+        reference: "LAS-20260828-ABC123",
+        commercialSpaceId: "space-public",
+        customerName: "Interesado",
+        phone: "99990000",
+        status: "new",
+      }),
+      setDoc(doc(db, "leasingActivities", "leasing-activity-a"), {
+        inquiryId: "leasing-a",
+        type: "created",
+      }),
+      setDoc(doc(db, "institutionalNotifications", "leasing-notification-a"), {
+        inquiryId: "leasing-a",
+        type: "leasing_inquiry_created",
+        readAt: null,
+      }),
     ]);
   });
 });
@@ -153,6 +180,49 @@ function applicant(uid = "applicant") {
 }
 
 describe("Firestore multitenant rules", () => {
+  it("exposes only published commercial spaces to the public", async () => {
+    const publicDb = environment.unauthenticatedContext().firestore();
+    await assertSucceeds(
+      getDoc(doc(publicDb, "commercialSpaces", "space-public")),
+    );
+    await assertFails(
+      getDoc(doc(publicDb, "commercialSpaces", "space-hidden")),
+    );
+    await assertFails(
+      setDoc(doc(publicDb, "leasingInquiries", "public-write"), {
+        status: "new",
+      }),
+    );
+  });
+
+  it("keeps leasing personal data restricted to institutional administrators", async () => {
+    const admin = institutional("admin", "institutional_admin");
+    const presentation = institutional("presentation", "presentation_viewer");
+    const merchantDb = merchant("merchant-a", "business-a");
+    await assertSucceeds(getDoc(doc(admin, "leasingInquiries", "leasing-a")));
+    await assertSucceeds(
+      updateDoc(doc(admin, "leasingInquiries", "leasing-a"), {
+        status: "contacted",
+      }),
+    );
+    await assertFails(
+      getDoc(doc(presentation, "leasingInquiries", "leasing-a")),
+    );
+    await assertFails(getDoc(doc(merchantDb, "leasingInquiries", "leasing-a")));
+    await assertFails(
+      getDoc(doc(presentation, "leasingActivities", "leasing-activity-a")),
+    );
+    await assertSucceeds(
+      getDoc(
+        doc(admin, "institutionalNotifications", "leasing-notification-a"),
+      ),
+    );
+    await assertFails(
+      updateDoc(doc(presentation, "commercialSpaces", "space-public"), {
+        published: false,
+      }),
+    );
+  });
   it("keeps applicants outside admin, CRM, products and other applications", async () => {
     const db = applicant();
     await assertSucceeds(
