@@ -135,7 +135,7 @@ export function ManualRequestDialog({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-brand-navy/55 backdrop-blur-[2px]" />
-        <Dialog.Popup className="fixed inset-0 z-50 overflow-y-auto bg-[#f7f9fc] sm:inset-6 sm:mx-auto sm:max-w-4xl sm:rounded-3xl sm:border sm:border-slate-200 sm:shadow-2xl">
+        <Dialog.Popup className="fixed inset-0 z-50 max-h-dvh overflow-y-auto bg-[#f7f9fc] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-6 sm:mx-auto sm:max-w-4xl sm:rounded-3xl sm:border sm:border-slate-200 sm:py-0 sm:shadow-2xl">
           <div className="sticky top-0 z-10 flex items-start gap-4 border-b border-slate-200 bg-white px-4 py-4 sm:rounded-t-3xl sm:px-7 sm:py-6">
             <div className="min-w-0 flex-1">
               <p className="text-xs font-extrabold tracking-[0.14em] text-brand-green-dark uppercase">

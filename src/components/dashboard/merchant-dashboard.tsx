@@ -416,6 +416,7 @@ function DashboardShell({
           </button>
           <button
             type="button"
+            aria-label="Nueva solicitud"
             onClick={() => setManualOpen(true)}
             className="button-primary min-h-11 px-3 sm:px-4"
           >

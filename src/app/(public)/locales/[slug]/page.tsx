@@ -136,7 +136,10 @@ export default async function CommercialSpaceDetailPage({
           </section>
         </div>
       </Container>
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-3 backdrop-blur md:hidden">
+      <div
+        data-testid="mobile-leasing-cta"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur md:hidden"
+      >
         <LeasingInquiryDialog
           spaceId={space.id}
           spaceTitle={space.title}

@@ -1,8 +1,9 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, LoaderCircle, Send, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -48,19 +49,6 @@ export function LeasingInquiryDialog({
     },
   });
 
-  useEffect(() => {
-    if (!open) return;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const close = (event: KeyboardEvent) =>
-      event.key === "Escape" && setOpen(false);
-    document.addEventListener("keydown", close);
-    return () => {
-      document.body.style.overflow = overflow;
-      document.removeEventListener("keydown", close);
-    };
-  }, [open]);
-
   async function submit(values: PublicLeasingInquiryInput) {
     setServerError("");
     const response = await fetch("/api/leasing-inquiries", {
@@ -84,86 +72,76 @@ export function LeasingInquiryDialog({
   }
 
   return (
-    <>
-      <button
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger
         type="button"
         data-testid="open-leasing-inquiry"
         onClick={() => {
           setSubmitted(null);
-          setOpen(true);
+          setServerError("");
         }}
         className={buttonClassName}
       >
         Solicitar información <Send className="size-4" />
-      </button>
-      {open && (
-        <div
-          className="fixed inset-0 z-[80] overflow-y-auto bg-brand-navy/65 px-3 py-4 backdrop-blur-sm sm:px-6 sm:py-8"
-          role="presentation"
-          onMouseDown={(event) =>
-            event.target === event.currentTarget && setOpen(false)
-          }
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-[80] bg-brand-navy/65 backdrop-blur-sm" />
+        <Dialog.Popup
+          data-testid="leasing-inquiry-dialog"
+          className="fixed inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[90] flex min-h-0 flex-col overflow-hidden rounded-3xl bg-slate-50 shadow-2xl sm:inset-x-6 sm:top-1/2 sm:bottom-auto sm:mx-auto sm:max-h-[calc(100dvh-4rem)] sm:w-[calc(100%-3rem)] sm:max-w-3xl sm:-translate-y-1/2"
         >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="inquiry-title"
-            className="mx-auto w-full max-w-3xl overflow-hidden rounded-3xl bg-slate-50 shadow-2xl"
-          >
-            <header className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
-              <div>
-                <p className="text-xs font-extrabold tracking-[0.12em] text-brand-green uppercase">
-                  Consulta institucional
+          <header className="z-10 flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 sm:px-7">
+            <div>
+              <p className="text-xs font-extrabold tracking-[0.12em] text-brand-green uppercase">
+                Consulta institucional
+              </p>
+              <Dialog.Title className="mt-1 text-xl font-black text-brand-navy">
+                Solicitar información
+              </Dialog.Title>
+              <Dialog.Description className="mt-1 text-sm text-slate-500">
+                {spaceTitle}
+              </Dialog.Description>
+            </div>
+            <Dialog.Close
+              type="button"
+              aria-label="Cerrar formulario"
+              className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-slate-100"
+            >
+              <X className="size-5" />
+            </Dialog.Close>
+          </header>
+          {submitted ? (
+            <div
+              data-testid="leasing-inquiry-success"
+              className="min-h-0 flex-1 overflow-y-auto px-6 py-14 text-center sm:px-12 sm:py-20"
+            >
+              <CheckCircle2 className="mx-auto size-16 text-brand-green" />
+              <h3 className="mt-5 text-3xl font-black text-brand-navy">
+                Solicitud recibida
+              </h3>
+              <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-600">
+                Hemos recibido su interés en este espacio. Nuestro equipo
+                administrativo podrá ponerse en contacto con usted para
+                confirmar disponibilidad, condiciones y próximos pasos.
+              </p>
+              {submitted !== "recibida" && (
+                <p className="mt-4 text-sm font-bold text-brand-blue">
+                  Referencia: {submitted}
                 </p>
-                <h2
-                  id="inquiry-title"
-                  className="mt-1 text-xl font-black text-brand-navy"
-                >
-                  Solicitar información
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">{spaceTitle}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Cerrar formulario"
-                className="grid size-11 shrink-0 place-items-center rounded-xl hover:bg-slate-100"
-              >
-                <X className="size-5" />
-              </button>
-            </header>
-            {submitted ? (
+              )}
+              <Dialog.Close type="button" className="button-primary mt-7">
+                Cerrar
+              </Dialog.Close>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit(submit)}
+              className="flex min-h-0 flex-1 flex-col"
+              noValidate
+            >
               <div
-                data-testid="leasing-inquiry-success"
-                className="px-6 py-14 text-center sm:px-12 sm:py-20"
-              >
-                <CheckCircle2 className="mx-auto size-16 text-brand-green" />
-                <h3 className="mt-5 text-3xl font-black text-brand-navy">
-                  Solicitud recibida
-                </h3>
-                <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-600">
-                  Hemos recibido su interés en este espacio. Nuestro equipo
-                  administrativo podrá ponerse en contacto con usted para
-                  confirmar disponibilidad, condiciones y próximos pasos.
-                </p>
-                {submitted !== "recibida" && (
-                  <p className="mt-4 text-sm font-bold text-brand-blue">
-                    Referencia: {submitted}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="button-primary mt-7"
-                >
-                  Cerrar
-                </button>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit(submit)}
-                className="grid gap-5 px-5 py-6 sm:grid-cols-2 sm:px-7"
-                noValidate
+                data-testid="leasing-inquiry-scroll"
+                className="grid min-h-0 flex-1 gap-5 overflow-y-auto overscroll-contain px-5 py-6 sm:grid-cols-2 sm:px-7"
               >
                 <input type="hidden" {...register("commercialSpaceId")} />
                 <div className="sr-only" aria-hidden="true">
@@ -281,37 +259,36 @@ export function LeasingInquiryDialog({
                   Central de Abastos de Sula para dar seguimiento a esta
                   solicitud.
                 </p>
-                <div className="flex flex-col-reverse gap-3 sm:col-span-2 sm:flex-row sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(false)}
-                    className="button-secondary"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="button-primary disabled:opacity-60"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <LoaderCircle className="size-4 animate-spin" />
-                        Enviando
-                      </>
-                    ) : (
-                      <>
-                        Enviar solicitud <Send className="size-4" />
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-        </div>
-      )}
-    </>
+              </div>
+              <div
+                data-testid="leasing-inquiry-actions"
+                className="flex shrink-0 flex-col-reverse gap-3 border-t border-slate-200 bg-white px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:px-7"
+              >
+                <Dialog.Close type="button" className="button-secondary">
+                  Cancelar
+                </Dialog.Close>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="button-primary disabled:opacity-60"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="size-4 animate-spin" />
+                      Enviando
+                    </>
+                  ) : (
+                    <>
+                      Enviar solicitud <Send className="size-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </Dialog.Popup>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 

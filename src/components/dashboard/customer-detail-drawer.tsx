@@ -60,7 +60,7 @@ export function CustomerDetailDrawer({
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-brand-navy/55 backdrop-blur-[2px]" />
-        <Dialog.Popup className="fixed inset-y-0 right-0 z-50 flex w-full max-w-2xl flex-col overflow-hidden bg-white shadow-2xl transition-transform data-ending-style:translate-x-full data-starting-style:translate-x-full">
+        <Dialog.Popup className="fixed inset-y-0 right-0 z-50 flex max-h-dvh w-full max-w-2xl flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform data-ending-style:translate-x-full data-starting-style:translate-x-full sm:py-0">
           {customer && (
             <>
               <div className="flex items-start gap-4 border-b border-slate-200 px-5 py-5 sm:px-7">

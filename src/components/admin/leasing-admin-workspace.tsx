@@ -1,5 +1,6 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import {
   ArrowLeft,
   Bell,
@@ -337,24 +338,32 @@ export function LeasingAdminWorkspace({
                 />
               ))}
             </div>
-            {creating && (
-              <div className="fixed inset-0 z-50 overflow-y-auto bg-brand-navy/60 p-4 backdrop-blur-sm">
-                <div className="mx-auto max-w-2xl rounded-3xl bg-white p-5 sm:p-7">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-black text-brand-navy">
+            <Dialog.Root open={creating} onOpenChange={setCreating}>
+              <Dialog.Portal>
+                <Dialog.Backdrop className="fixed inset-0 z-50 bg-brand-navy/60 backdrop-blur-sm" />
+                <Dialog.Popup className="fixed inset-x-2 top-[max(0.5rem,env(safe-area-inset-top))] bottom-[max(0.5rem,env(safe-area-inset-bottom))] z-[60] mx-auto flex min-h-0 max-w-2xl flex-col overflow-hidden rounded-3xl bg-white sm:inset-x-6 sm:top-1/2 sm:bottom-auto sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-3rem)] sm:-translate-y-1/2">
+                  <div className="flex shrink-0 items-center justify-between border-b border-slate-200 p-5 sm:px-7">
+                    <Dialog.Title className="text-xl font-black text-brand-navy">
                       Crear espacio
-                    </h2>
-                    <button
-                      onClick={() => setCreating(false)}
+                    </Dialog.Title>
+                    <Dialog.Description className="sr-only">
+                      Formulario institucional para registrar un espacio
+                      comercial.
+                    </Dialog.Description>
+                    <Dialog.Close
+                      type="button"
+                      aria-label="Cerrar creación de espacio"
                       className="grid size-10 place-items-center rounded-xl hover:bg-slate-100"
                     >
                       <X />
-                    </button>
+                    </Dialog.Close>
                   </div>
-                  <SpaceEditor onSave={saveSpace} />
-                </div>
-              </div>
-            )}
+                  <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-7">
+                    <SpaceEditor onSave={saveSpace} />
+                  </div>
+                </Dialog.Popup>
+              </Dialog.Portal>
+            </Dialog.Root>
           </section>
         ) : (
           <div className="mt-6 grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">

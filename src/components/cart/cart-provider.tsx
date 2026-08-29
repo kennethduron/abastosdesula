@@ -1,5 +1,6 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
 import {
   createContext,
   useContext,
@@ -143,45 +144,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
 
       {pendingItem && (
-        <div className="fixed inset-0 z-[80] grid place-items-center bg-brand-navy/60 p-4 backdrop-blur-sm">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cart-conflict-title"
-            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl sm:p-7"
-          >
-            <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
-              Solicitudes separadas
-            </p>
-            <h2
-              id="cart-conflict-title"
-              className="mt-2 text-2xl font-extrabold text-brand-navy"
-            >
-              Tu carrito pertenece a otro comerciante
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Cada solicitud se envía a un solo negocio. Puedes conservar tu
-              carrito actual o limpiarlo para continuar con{" "}
-              {pendingItem.businessName}.
-            </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setPendingItem(null)}
-                className="button-secondary"
-              >
-                Conservar carrito
-              </button>
-              <button
-                type="button"
-                onClick={replaceCart}
-                className="button-primary"
-              >
-                Limpiar y continuar
-              </button>
-            </div>
-          </div>
-        </div>
+        <Dialog.Root
+          open
+          onOpenChange={(nextOpen) => !nextOpen && setPendingItem(null)}
+        >
+          <Dialog.Portal>
+            <Dialog.Backdrop className="fixed inset-0 z-[80] bg-brand-navy/60 backdrop-blur-sm" />
+            <Dialog.Popup className="fixed inset-x-4 top-1/2 z-[90] mx-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-md -translate-y-1/2 overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-7">
+              <p className="text-xs font-extrabold tracking-[0.16em] text-brand-green uppercase">
+                Solicitudes separadas
+              </p>
+              <Dialog.Title className="mt-2 text-2xl font-extrabold text-brand-navy">
+                Tu carrito pertenece a otro comerciante
+              </Dialog.Title>
+              <Dialog.Description className="mt-3 text-sm leading-6 text-slate-600">
+                Cada solicitud se envía a un solo negocio. Puedes conservar tu
+                carrito actual o limpiarlo para continuar con{" "}
+                {pendingItem.businessName}.
+              </Dialog.Description>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <Dialog.Close type="button" className="button-secondary">
+                  Conservar carrito
+                </Dialog.Close>
+                <button
+                  type="button"
+                  onClick={replaceCart}
+                  className="button-primary"
+                >
+                  Limpiar y continuar
+                </button>
+              </div>
+            </Dialog.Popup>
+          </Dialog.Portal>
+        </Dialog.Root>
       )}
     </CartContext.Provider>
   );

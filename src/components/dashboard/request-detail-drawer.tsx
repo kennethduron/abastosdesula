@@ -75,7 +75,7 @@ export function RequestDetailDrawer({
     >
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-40 bg-brand-navy/55 backdrop-blur-[2px] transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <Dialog.Popup className="fixed inset-y-0 right-0 z-50 flex w-full max-w-3xl flex-col overflow-hidden bg-white shadow-2xl transition-transform duration-200 data-ending-style:translate-x-full data-starting-style:translate-x-full">
+        <Dialog.Popup className="fixed inset-y-0 right-0 z-50 flex max-h-dvh w-full max-w-3xl flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-2xl transition-transform duration-200 data-ending-style:translate-x-full data-starting-style:translate-x-full sm:py-0">
           {request && (
             <>
               <div className="shrink-0 border-b border-slate-200 bg-white px-4 pt-4 sm:px-7 sm:pt-6">
